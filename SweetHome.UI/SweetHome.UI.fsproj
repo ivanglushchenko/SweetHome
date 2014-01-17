@@ -80,4 +80,11 @@
     <Reference Include="UIAutomationTypes" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SweetHome.Core\SweetHome.Core.fsproj">
+      <Name>SweetHome.Core</Name>
+      <Project>{4598f0d4-cc90-4ab6-a3c2-831de79cddab}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+  </ItemGroup>
 </Project>

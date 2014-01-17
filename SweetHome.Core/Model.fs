@@ -1,38 +1,63 @@
-﻿namespace SweetHome.Core
+﻿module Model
 
 open System
+open System.Collections.Generic
 
-module Model =
-    
-    type FeedItem =
-        {   Id: string
-            FeedId: string
-            Url: string
-            Place: string
-            Caption: string
-            Specials: string
-            Price: float option
-            PublishedAt: DateTime
-            ReceivedAt: DateTime
-            Map: string
-            Address: string
-            Bedrooms: int option
-            Content: string
-            Images: string list
-            SimiliarItems: FeedItem list
-            SimiliarItemsTotal: int
-            SimiliarItemsToday: int
-            FirstAppearanceOffset: int
-            Phones: string list
-            Year: int }
+type Advertisment =
+    {   Id: string
+        FeedId: string
+        Url: string
+        Place: string
+        Caption: string
+        Specials: string
+        Price: float option
+        PublishedAt: DateTime option
+        ReceivedAt: DateTime option
+        Map: string
+        Address: string
+        Bedrooms: int option
+        Content: string
+        Images: string list
+        SimiliarItems: string list
+        SimiliarItemsTotal: int
+        SimiliarItemsToday: int
+        FirstAppearanceOffset: int
+        Phones: string list
+        Year: int }
 
-    type Feed =
-        {   Id: string
-            Name: string
-            Url: string
-            Keywords: string
-            Ignores: string
-            MinPrice: int
-            MaxPrice: int
-            Items: FeedItem list
-            IsEnabled: bool }
+let EmptyAdvertisment =
+    {   Id = "";
+        FeedId = "";
+        Url = "";
+        Place = "";
+        Caption = "";
+        Specials = "";
+        Price = None;
+        PublishedAt = None;
+        ReceivedAt = None;
+        Map = "";
+        Address = "";
+        Bedrooms = None;
+        Content = "";
+        Images = [];
+        SimiliarItems = [];
+        SimiliarItemsTotal = 0;
+        SimiliarItemsToday = 0;
+        FirstAppearanceOffset = 0;
+        Phones = [];
+        Year = 0 }
+
+type Subscription =
+    {   Name: string
+        Url: string
+        Ignores: string
+        Items: List<string>
+        IsEnabled: bool }
+
+let EmptySubscription =
+    {   Name = "";
+        Url = "";
+        Ignores = "";
+        Items = List();
+        IsEnabled = true }
+
