@@ -7,8 +7,6 @@ open System.Net
 open System.Text.RegularExpressions
 open System.Collections.Generic
 open System.Runtime.Serialization.Formatters.Binary
-open System.Runtime.Serialization.Json
-open System.Runtime.Serialization
 open Model
 
 module private State =
@@ -38,13 +36,14 @@ module private State =
     let advertismentsDirectory = 
         getOrCreateSubDir storeDirectory "advertisments"
 
-    let subscriptionsSerializer = new DataContractSerializer(typeof<Subscription>)
-
     let subscriptions =
         let tasks =
             subscriptionsDirectory.GetFiles() 
             |> Seq.map (fun file -> use fs = file.OpenRead() in binDeserialize fs :?> Subscription)
-        List(tasks)
+        let d = Dictionary<string, Subscription>()
+        for s in tasks do
+            d.Add(s.Name, s)
+        d
 
     let adGroups =
         let load (file: FileInfo) =
@@ -61,16 +60,19 @@ module private State =
             dic.Add(dt, ads)
         dic
 
-    let getGroup dt =
-        if adGroups.ContainsKey dt
-        then adGroups.[dt]
+    let getGroup ad =
+        if adGroups.ContainsKey ad.PublishedAt
+        then adGroups.[ad.PublishedAt]
         else
             let d = Dictionary<string, Advertisment>()
-            adGroups.Add(dt, d)
+            adGroups.Add(ad.PublishedAt, d)
             d
 
+    let isNewAdvertisment ad =
+        adGroups.ContainsKey ad.PublishedAt = false || adGroups.[ad.PublishedAt].ContainsKey ad.Url = false
+
     let addAdvertisement ad =
-        let group = getGroup ad.PublishedAt
+        let group = getGroup ad
         group.[ad.Url] <- ad
 
     let addAdvertisments ads =
@@ -78,9 +80,9 @@ module private State =
 
     let saveSubscriptions() =
         for subscription in subscriptions do
-            let fileName = Path.Combine(subscriptionsDirectory.FullName, subscription.Name)
+            let fileName = Path.Combine(subscriptionsDirectory.FullName, subscription.Value.Name)
             use fs = new FileStream(fileName, FileMode.Create)
-            binSerialize fs subscription 
+            binSerialize fs subscription.Value
              
     let saveAdvertisments() =
         for group in adGroups do
@@ -89,27 +91,36 @@ module private State =
             group.Value |> binSerialize fs
             fs.Dispose()
 
-let getContent url =
-    async { let client = new WebClient()
-            let! content = client.AsyncDownloadString(new Uri(url))
-            return content  }
-
-let downloadSubscriptions() =
-    let advertisments = 
+let refreshSubscriptions() =
+    let getContent url =
+        async { let client = new WebClient()
+                let! content = client.AsyncDownloadString(new Uri(url))
+                return content  }
+    let newAdvertisments = 
         State.subscriptions
-        |> Seq.map (fun t -> t.Url)
+        |> Seq.map (fun t -> t.Value.Url)
         |> Seq.map getContent
         |> Async.Parallel
         |> Async.RunSynchronously
         |> Array.map Parsing.parsePage
         |> List.concat
-    State.addAdvertisments advertisments
-    State.saveAdvertisments()
+        |> List.filter State.isNewAdvertisment
+    if newAdvertisments.Length > 0 then
+        State.addAdvertisments newAdvertisments
+        State.saveAdvertisments()
 
 let load() =
-    downloadSubscriptions()
+    refreshSubscriptions()
     ()
 
 let addSubscription s =
-    State.subscriptions.Add s
+    State.subscriptions.[s.Name] <- s
     State.saveSubscriptions()
+
+let getLatest n =
+    let rec loadMore n (groups: Dictionary<string, Advertisment> list) = 
+        seq { if n > 0 && groups.IsEmpty = false then
+                let m = min n groups.Head.Count
+                yield! groups.Head |> Seq.sortBy (fun t -> (DateTime.MaxValue.Subtract t.Value.ReceivedAt).TotalDays) |> Seq.map (fun t -> t.Value)
+                yield! loadMore (n - m) groups.Tail }
+    loadMore n (State.adGroups |> Seq.sortBy (fun t -> (DateTime.MaxValue.Subtract t.Key).TotalDays) |> Seq.map (fun t -> t.Value) |> Seq.toList)
