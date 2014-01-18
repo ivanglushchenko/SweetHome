@@ -11,82 +11,105 @@ open System.Runtime.Serialization.Json
 open System.Runtime.Serialization
 open Model
 
-let rootDirectory = @"s:\Sources\_Data\SweetHome\"
+module private State =
+    let rootDirectory = @"s:\Sources\_Data\SweetHome\"
 
-let storeDirectory =
-    let path = Path.Combine(rootDirectory, "store")
-    if Directory.Exists path = false 
-    then Directory.CreateDirectory path
-    else DirectoryInfo(path)
+    let binSerialize where what =
+        BinaryFormatter().Serialize(where, what)
 
-let subscriptionsDirectory = 
-    let d = storeDirectory.GetDirectories "subscriptions"
-    if d.Length = 0
-    then storeDirectory.CreateSubdirectory "subscriptions"
-    else d.[0]
+    let binDeserialize from =
+        BinaryFormatter().Deserialize(from)
 
-let advertismentsDirectory = 
-    let d = storeDirectory.GetDirectories "advertisments"
-    if d.Length = 0
-    then storeDirectory.CreateSubdirectory "advertisments"
-    else d.[0]
+    let storeDirectory =
+        let path = Path.Combine(rootDirectory, "store")
+        if Directory.Exists path = false 
+        then Directory.CreateDirectory path
+        else DirectoryInfo(path)
+
+    let getOrCreateSubDir (dir: DirectoryInfo) n =
+        let d = storeDirectory.GetDirectories n
+        if d.Length = 0
+        then storeDirectory.CreateSubdirectory n
+        else d.[0]
+
+    let subscriptionsDirectory = 
+        getOrCreateSubDir storeDirectory "subscriptions"
+
+    let advertismentsDirectory = 
+        getOrCreateSubDir storeDirectory "advertisments"
+
+    let subscriptionsSerializer = new DataContractSerializer(typeof<Subscription>)
+
+    let subscriptions =
+        let tasks =
+            subscriptionsDirectory.GetFiles() 
+            |> Seq.map (fun file -> use fs = file.OpenRead() in binDeserialize fs :?> Subscription)
+        List(tasks)
+
+    let adGroups =
+        let load (file: FileInfo) =
+            async { use s = file.OpenRead()
+                    let publishedAt = DateTime.Parse file.Name
+                    return publishedAt, binDeserialize s :?> Dictionary<string, Advertisment> }
+        let groups =
+            advertismentsDirectory.GetFiles()
+            |> Seq.map load
+            |> Async.Parallel
+            |> Async.RunSynchronously
+        let dic = Dictionary<DateTime, Dictionary<string, Advertisment>>()
+        for dt, ads in groups do
+            dic.Add(dt, ads)
+        dic
+
+    let getGroup dt =
+        if adGroups.ContainsKey dt
+        then adGroups.[dt]
+        else
+            let d = Dictionary<string, Advertisment>()
+            adGroups.Add(dt, d)
+            d
+
+    let addAdvertisement ad =
+        let group = getGroup ad.PublishedAt
+        group.[ad.Url] <- ad
+
+    let addAdvertisments ads =
+        ads |> Seq.iter addAdvertisement
+
+    let saveSubscriptions() =
+        for subscription in subscriptions do
+            let fileName = Path.Combine(subscriptionsDirectory.FullName, subscription.Name)
+            use fs = new FileStream(fileName, FileMode.Create)
+            binSerialize fs subscription 
+             
+    let saveAdvertisments() =
+        for group in adGroups do
+            let fileName = Path.Combine(advertismentsDirectory.FullName, group.Key.ToString("yyyy-MM-dd"))
+            use fs = new FileStream(fileName, FileMode.Create)
+            group.Value |> binSerialize fs
+            fs.Dispose()
 
 let getContent url =
     async { let client = new WebClient()
             let! content = client.AsyncDownloadString(new Uri(url))
             return content  }
 
-module private State =
-    let subscriptionsSerializer = new DataContractSerializer(typeof<Subscription>)
-    let subscriptions =
-        let loadSubscription (stream: Stream) =
-            async { let s = subscriptionsSerializer.ReadObject(stream) :?> Subscription
-                    return s } 
-        let tasks =
-            subscriptionsDirectory.GetFiles() 
-            |> Seq.map (fun file -> file.OpenRead() |> subscriptionsSerializer.ReadObject :?> Subscription)
-        List(tasks)
-
-    let saveSubscription s =
-        let sFileName = Path.Combine(subscriptionsDirectory.FullName, s.Name)
-        use fs = new FileStream(sFileName, FileMode.Create)
-        subscriptionsSerializer.WriteObject(fs, s)
-
 let downloadSubscriptions() =
-    let parse content =
-        let r = new Regex("""<p class="row"[^>]*>(\s)*<a[^>]*>(\s)*</a>(\s)*<span class="star"></span>(\s)*<span class="pl">(\s)*<span class="date">[^<]*</span>(\s)*<a href="[^"]*">[^<]*</a>(\s)*</span>(\s)*<span[^>]*>(\s)*<span class="price">[^<]*</span>(\s)*/[^<]*<span class="pnr">((\s)*<small>[^<]*</small>(\s)*)?""")
-        let s = seq { for m in r.Matches(content) -> m } |> List.ofSeq
-        () 
-
-    let contents = 
+    let advertisments = 
         State.subscriptions
         |> Seq.map (fun t -> t.Url)
         |> Seq.map getContent
         |> Async.Parallel
         |> Async.RunSynchronously
-        |> Array.map parse
-    ()
+        |> Array.map Parsing.parsePage
+        |> List.concat
+    State.addAdvertisments advertisments
+    State.saveAdvertisments()
 
 let load() =
     downloadSubscriptions()
-    //State.loadSubscriptions()
-    let ad = { EmptyAdvertisment with Id = "sss" }
-    let bf = new BinaryFormatter()
-    let ms = new MemoryStream()
-    bf.Serialize(ms, ad)
-
-    ms.Seek(0L, SeekOrigin.Begin) |> ignore
-
-    let ad2 = bf.Deserialize(ms) :?> Advertisment
-    let partitions = storeDirectory.GetFiles()
-//    let loadPartition (f: FileInfo) =
-//        async { let s = f.OpenText()
-//
-//                return Array.map convert adv }
-
-        //async { let! s = Stream. }
     ()
 
 let addSubscription s =
     State.subscriptions.Add s
-    State.saveSubscription s
+    State.saveSubscriptions()

@@ -4,15 +4,13 @@ open System
 open System.Collections.Generic
 
 type Advertisment =
-    {   Id: string
-        FeedId: string
-        Url: string
+    {   Url: string
         Place: string
         Caption: string
         Specials: string
         Price: float option
-        PublishedAt: DateTime option
-        ReceivedAt: DateTime option
+        PublishedAt: DateTime
+        ReceivedAt: DateTime
         Map: string
         Address: string
         Bedrooms: int option
@@ -24,17 +22,16 @@ type Advertisment =
         FirstAppearanceOffset: int
         Phones: string list
         Year: int }
+    override x.ToString() = sprintf "[%O] %s (%O/%O) - %O" x.PublishedAt x.Caption x.Place x.Bedrooms x.Price
 
 let EmptyAdvertisment =
-    {   Id = "";
-        FeedId = "";
-        Url = "";
+    {   Url = "";
         Place = "";
         Caption = "";
         Specials = "";
         Price = None;
-        PublishedAt = None;
-        ReceivedAt = None;
+        PublishedAt = DateTime.MinValue;
+        ReceivedAt = DateTime.MinValue;
         Map = "";
         Address = "";
         Bedrooms = None;
@@ -50,6 +47,7 @@ let EmptyAdvertisment =
 type Subscription =
     {   Name: string
         Url: string
+        BaseAddress: string
         Ignores: string
         Items: List<string>
         IsEnabled: bool }
@@ -57,6 +55,7 @@ type Subscription =
 let EmptySubscription =
     {   Name = "";
         Url = "";
+        BaseAddress = "";
         Ignores = "";
         Items = List();
         IsEnabled = true }
