@@ -9,8 +9,8 @@ type Advertisment =
         Caption: string
         Specials: string
         Price: float option
-        PublishedAt: DateTime
-        ReceivedAt: DateTime
+        FirstAppearedAt: DateTime
+        LastAppearedAt: DateTime
         Map: string
         Address: string
         Bedrooms: int option
@@ -19,30 +19,28 @@ type Advertisment =
         SimiliarItems: string list
         SimiliarItemsTotal: int
         SimiliarItemsToday: int
-        FirstAppearanceOffset: int
         Phones: string list
-        Year: int }
-    override x.ToString() = sprintf "[%O] %s (%O/%O) - %O" x.PublishedAt x.Caption x.Place x.Bedrooms x.Price
+        Origins: HashSet<string> }
+    override x.ToString() = sprintf "[%O] %s (%O/%O) - %O" x.LastAppearedAt x.Caption x.Place x.Bedrooms x.Price
 
 let EmptyAdvertisment =
-    {   Url = "";
-        Place = "";
-        Caption = "";
-        Specials = "";
+    {   Url = ""
+        Place = ""
+        Caption = ""
+        Specials = ""
         Price = None;
-        PublishedAt = DateTime.MinValue;
-        ReceivedAt = DateTime.MinValue;
-        Map = "";
-        Address = "";
-        Bedrooms = None;
-        Content = "";
-        Images = [];
-        SimiliarItems = [];
-        SimiliarItemsTotal = 0;
-        SimiliarItemsToday = 0;
-        FirstAppearanceOffset = 0;
-        Phones = [];
-        Year = 0 }
+        FirstAppearedAt = DateTime.MinValue
+        LastAppearedAt = DateTime.MinValue
+        Map = ""
+        Address = ""
+        Bedrooms = None
+        Content = ""
+        Images = []
+        SimiliarItems = []
+        SimiliarItemsTotal = 0
+        SimiliarItemsToday = 0
+        Phones = []
+        Origins = HashSet<string>() }
 
 type Subscription =
     {   Name: string

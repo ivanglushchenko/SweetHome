@@ -1,15 +1,79 @@
 ﻿<Window
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="" Height="450" Width="700">
+        Title="" Height="450" Width="1200">
 
-    <ListView x:Name="lbItems">
-        <ListView.View>
-            <GridView>
-                <GridViewColumn Header="" DisplayMemberBinding="{Binding PublishedAt, StringFormat=MMM dd}" Width="60" />
-                <GridViewColumn Header="" DisplayMemberBinding="{Binding Caption}" Width="400" />
-                <GridViewColumn Header="" DisplayMemberBinding="{Binding Price}" Width="60" />
-            </GridView>
-        </ListView.View>
-    </ListView>
+    <DockPanel Margin="10">
+        <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="0,0,0,10">
+            <Button x:Name="btnRefresh">refresh</Button>
+        </StackPanel>
+
+        <ScrollViewer DockPanel.Dock="Top" MaxHeight="500">
+            <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Width="60">Origins:</TextBlock>
+                    <ItemsControl x:Name="lbFilterByOrigin" Margin="10,0,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <CheckBox Content="{Binding}" Margin="0,0,4,0">
+                                    <!--<CheckBox.InputBindings>
+                                        <MouseBinding Gesture="LeftClick" Command="ApplicationCommands.CancelPrint" CommandParameter="{Binding}" />
+                                    </CheckBox.InputBindings>-->
+                                </CheckBox>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock  Width="60">Bedrooms:</TextBlock>
+                    <ItemsControl x:Name="lbFilterByBedrooms" Margin="10,0,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <CheckBox Content="{Binding}" Margin="0,0,4,0" MinWidth="50">
+                                    <!--<CheckBox.InputBindings>
+                                        <MouseBinding Gesture="LeftClick" Command="ApplicationCommands.CorrectionList" CommandParameter="{Binding}" />
+                                    </CheckBox.InputBindings>-->
+                                </CheckBox>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <ListView x:Name="lbItems">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="" DisplayMemberBinding="{Binding LastAppearedAt, StringFormat=MMM dd}" Width="60" TextBlock.FontSize="9" />
+                    <GridViewColumn Header="" Width="600">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <StackPanel Orientation="Horizontal" Width="60">
+                                        <TextBlock Text="$"/>
+                                        <TextBlock Text="{Binding Price.Value}" />
+                                        <TextBlock Text="/" Margin="2,0" />
+                                        <TextBlock Text="{Binding Bedrooms.Value}"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding Caption}" Margin="15,0,0,0"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="" DisplayMemberBinding="{Binding Place}" Width="250" />
+                </GridView>
+            </ListView.View>
+        </ListView>
+    </DockPanel>
 </Window>

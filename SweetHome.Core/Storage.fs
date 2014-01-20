@@ -61,22 +61,24 @@ module private State =
         dic
 
     let getGroup ad =
-        if adGroups.ContainsKey ad.PublishedAt
-        then adGroups.[ad.PublishedAt]
+        if adGroups.ContainsKey ad.LastAppearedAt.Date
+        then adGroups.[ad.LastAppearedAt.Date]
         else
             let d = Dictionary<string, Advertisment>()
-            adGroups.Add(ad.PublishedAt, d)
+            adGroups.Add(ad.LastAppearedAt.Date, d)
             d
-
-    let isNewAdvertisment ad =
-        adGroups.ContainsKey ad.PublishedAt = false || adGroups.[ad.PublishedAt].ContainsKey ad.Url = false
 
     let addAdvertisement ad =
         let group = getGroup ad
-        group.[ad.Url] <- ad
+        if group.ContainsKey ad.Url then
+            group.[ad.Url].Origins.UnionWith ad.Origins
+            None
+        else
+            group.[ad.Url] <- ad
+            Some ad
 
     let addAdvertisments ads =
-        ads |> Seq.iter addAdvertisement
+        ads |> Seq.iter (addAdvertisement >> ignore)
 
     let saveSubscriptions() =
         for subscription in subscriptions do
@@ -92,26 +94,29 @@ module private State =
             fs.Dispose()
 
 let refreshSubscriptions() =
-    let getContent url =
+    let getContent (context, url) =
         async { let client = new WebClient()
                 let! content = client.AsyncDownloadString(new Uri(url))
-                return content  }
-    let newAdvertisments = 
+                return context, content }
+    let latestAdvertisments = 
         State.subscriptions
-        |> Seq.map (fun t -> t.Value.Url)
+        |> Seq.map (fun t -> t.Value, t.Value.Url)
         |> Seq.map getContent
         |> Async.Parallel
         |> Async.RunSynchronously
         |> Array.map Parsing.parsePage
         |> List.concat
-        |> List.filter State.isNewAdvertisment
+    let newAdvertisments = latestAdvertisments |> List.choose State.addAdvertisement
     if newAdvertisments.Length > 0 then
+        let enrichedAdvertisments = 
+            newAdvertisments 
+            |> List.map (fun t -> t, t.Url) 
+            |> List.map getContent 
+            |> Async.Parallel
+            |> Async.RunSynchronously
+            |> Array.map Parsing.enrichAdvertisment
         State.addAdvertisments newAdvertisments
         State.saveAdvertisments()
-
-let load() =
-    refreshSubscriptions()
-    ()
 
 let addSubscription s =
     State.subscriptions.[s.Name] <- s
@@ -121,6 +126,6 @@ let getLatest n =
     let rec loadMore n (groups: Dictionary<string, Advertisment> list) = 
         seq { if n > 0 && groups.IsEmpty = false then
                 let m = min n groups.Head.Count
-                yield! groups.Head |> Seq.sortBy (fun t -> (DateTime.MaxValue.Subtract t.Value.ReceivedAt).TotalDays) |> Seq.map (fun t -> t.Value)
+                yield! groups.Head |> Seq.sortBy (fun t -> (DateTime.MaxValue.Subtract t.Value.LastAppearedAt).TotalDays) |> Seq.map (fun t -> t.Value)
                 yield! loadMore (n - m) groups.Tail }
     loadMore n (State.adGroups |> Seq.sortBy (fun t -> (DateTime.MaxValue.Subtract t.Key).TotalDays) |> Seq.map (fun t -> t.Value) |> Seq.toList)
