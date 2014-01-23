@@ -6,9 +6,10 @@ open System.Collections.Generic
 open System.Text.RegularExpressions
 open Model
 
-let reUnicode = new Regex("""&#x[0-9]+;""");
+let reUnicode = new Regex("""&#x[0-9]+;|&[a-zA-Z]+;""");
 let rePage = new Regex("""<p class="row"[^>]*>(\s)*<a[^>]*>(\s)*</a>(\s)*<span class="star"></span>(\s)*<span class="pl">(\s)*<span class="date">(?<date>[^<]*)</span>(\s)*<a href="(?<url>[^"]*)">(?<caption>[^<]*)</a>(\s)*</span>(\s)*<span[^>]*>(\s)*<span class="price">(?<price>[^<]*)</span>(\s)*/(?<bd>[^<]*)(\s)*-(\s)*<span class="pnr">((\s)*<small>(?<place>[^<]*)</small>(\s)*)?""")
 let reAdvertismentPostedDate = new Regex("""<p class="postinginfo">posted: <time datetime="(?<date>[^"]*)""")
+let reAdvertismentUpdatedDate = new Regex("""<p class="postinginfo">updated: <time datetime="(?<date>[^"]*)""")
 
 let trim (s: string) = 
     s.Trim()
@@ -93,7 +94,16 @@ let parsePage (subscribtion, page) =
     advertisments
 
 let enrichAdvertisment (advertisment, content) =
-    let m = reAdvertismentPostedDate.Match content
-    if m.Success
-    then match tryParseDate m.Groups.["date"].Value with | Some d -> { advertisment with FirstAppearedAt = d } | None -> advertisment
-    else advertisment
+    let update adv (re: Regex) (groupName: string) f =
+        let m = re.Match content
+        if m.Success
+        then f adv m.Groups.[groupName].Value
+        else adv
+
+    let ret =
+        Array.fold 
+            (fun acc (re, groupName, f) -> update acc re groupName f) 
+            advertisment
+            [| reAdvertismentPostedDate, "date", fun t v -> let d = tryParseDate v |> Option.get in { t with FirstAppearedAt = d; LastAppearedAt = d }
+               reAdvertismentUpdatedDate, "date", fun t v -> { t with LastAppearedAt = tryParseDate v |> Option.get } |]
+    ret

@@ -15,10 +15,7 @@
                     <ItemsControl x:Name="lbFilterByOrigin" Margin="10,0,0,0">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <CheckBox Content="{Binding}" Margin="0,0,4,0">
-                                    <!--<CheckBox.InputBindings>
-                                        <MouseBinding Gesture="LeftClick" Command="ApplicationCommands.CancelPrint" CommandParameter="{Binding}" />
-                                    </CheckBox.InputBindings>-->
+                                <CheckBox Content="{Binding}" Margin="0,0,4,0" MinWidth="80">
                                 </CheckBox>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
@@ -35,10 +32,7 @@
                     <ItemsControl x:Name="lbFilterByBedrooms" Margin="10,0,0,0">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <CheckBox Content="{Binding}" Margin="0,0,4,0" MinWidth="50">
-                                    <!--<CheckBox.InputBindings>
-                                        <MouseBinding Gesture="LeftClick" Command="ApplicationCommands.CorrectionList" CommandParameter="{Binding}" />
-                                    </CheckBox.InputBindings>-->
+                                <CheckBox Content="{Binding}" Margin="0,0,4,0" MinWidth="80">
                                 </CheckBox>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>

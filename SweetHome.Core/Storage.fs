@@ -68,14 +68,17 @@ module private State =
             adGroups.Add(ad.LastAppearedAt.Date, d)
             d
 
+    let containsAdvertisement ad =
+        let group = getGroup ad
+        group.ContainsKey ad.Url
+
     let addAdvertisement ad =
         let group = getGroup ad
-        if group.ContainsKey ad.Url then
-            group.[ad.Url].Origins.UnionWith ad.Origins
-            None
-        else
-            group.[ad.Url] <- ad
-            Some ad
+        group.Add(ad.Url, ad)
+
+    let addOrigin ad =
+        let group = getGroup ad
+        group.[ad.Url].Origins.UnionWith ad.Origins
 
     let addAdvertisments ads =
         ads |> Seq.iter (addAdvertisement >> ignore)
@@ -106,17 +109,19 @@ let refreshSubscriptions() =
         |> Async.RunSynchronously
         |> Array.map Parsing.parsePage
         |> List.concat
-    let newAdvertisments = latestAdvertisments |> List.choose State.addAdvertisement
+    let (existingAdvertisments, newAdvertisments) = latestAdvertisments |> List.partition State.containsAdvertisement
     if newAdvertisments.Length > 0 then
         let enrichedAdvertisments = 
             newAdvertisments 
-            |> List.map (fun t -> t, t.Url) 
-            |> List.map getContent 
+            |> Seq.distinctBy (fun t -> t.Url)
+            |> Seq.map (fun t -> t, t.Url) 
+            |> Seq.map getContent 
             |> Async.Parallel
             |> Async.RunSynchronously
             |> Array.map Parsing.enrichAdvertisment
-        State.addAdvertisments newAdvertisments
+        State.addAdvertisments enrichedAdvertisments
         State.saveAdvertisments()
+    existingAdvertisments |> List.iter State.addOrigin
 
 let addSubscription s =
     State.subscriptions.[s.Name] <- s
@@ -128,4 +133,4 @@ let getLatest n =
                 let m = min n groups.Head.Count
                 yield! groups.Head |> Seq.sortBy (fun t -> (DateTime.MaxValue.Subtract t.Value.LastAppearedAt).TotalDays) |> Seq.map (fun t -> t.Value)
                 yield! loadMore (n - m) groups.Tail }
-    loadMore n (State.adGroups |> Seq.sortBy (fun t -> (DateTime.MaxValue.Subtract t.Key).TotalDays) |> Seq.map (fun t -> t.Value) |> Seq.toList)
+    loadMore n (State.adGroups |> Seq.sortBy (fun t -> (DateTime.MaxValue.Subtract t.Key).TotalDays) |> Seq.map (fun t -> t.Value) |> Seq.toList) |> Seq.sortBy (fun t -> DateTime.MaxValue.Subtract t.LastAppearedAt)
