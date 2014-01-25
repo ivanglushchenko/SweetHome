@@ -10,17 +10,22 @@ open System.Windows
 open System.Windows.Data
 open System.Windows.Input
 open System.Windows.Media
+open System.Windows.Documents
 open System.Diagnostics
 open System.Windows
 open FSharpx
 
 type MainWindow = XAML<"MainWindow.xaml">
 
-let rec getUrl (source: DependencyObject) =
+let getUrl (source: DependencyObject) =
+    let rec loop (s: DependencyObject) =
+        match s with
+        | :? FrameworkContentElement as r -> r.Parent |> loop
+        | :? FrameworkElement as fe -> (fe.DataContext :?> Model.Advertisment).Url |> Some
+        | _ -> None
     match source with
-    | null -> None
-    | :? ListViewItem as li -> (li.DataContext :?> Model.Advertisment).Url |> Some
-    | _ -> VisualTreeHelper.GetParent source |> getUrl
+    | :? FrameworkContentElement as r -> loop r
+    | _ -> None
 
 let loadWindow() =
     let window = MainWindow()
@@ -61,7 +66,7 @@ let loadWindow() =
     let asHandler f = new RoutedEventHandler(fun s e -> (e.OriginalSource :?> CheckBox).DataContext |> (fun t -> ignore(f t); resetFilter()))
         
     window.lbItems.ItemsSource <- itemsView
-    window.lbItems.MouseDoubleClick.Add(fun e -> getUrl (e.OriginalSource :?> DependencyObject) |> Option.bind (fun url -> Process.Start(url.ToString()) |> Some) |> ignore)
+    window.lbItems.PreviewMouseUp.Add(fun e -> getUrl (e.OriginalSource :?> DependencyObject) |> Option.bind (fun url -> Process.Start(url.ToString()) |> Some) |> ignore)
     window.btnRefresh.Click.Add(fun e -> refreshItems())
     
     window.lbFilterByOrigin.AddHandler(CheckBox.CheckedEvent, asHandler (fun o -> o :?> string |> includedOrigins.Add))

@@ -1,9 +1,12 @@
 ﻿module Getter
 
+open System
+open System.Net
 open System.Linq
 open System.Threading
 open System.Threading.Tasks
 open System.Collections.Generic
+open Model
 
 let maxConnections = 10
 
@@ -36,3 +39,18 @@ let getAll (tasks: (unit -> 'v) seq) =
     loop initialArray
     
     results |> Seq.toArray
+
+let getContent (context, url) =
+    let client = new WebClient()
+    let content = client.DownloadString(new Uri(url))
+    context, content
+
+let getAllSubscriptions subscriptions =
+    subscriptions
+    |> Seq.map (fun t -> fun () -> getContent (t, t.Url))
+    |> getAll
+
+let getAllAdvertisments (advertisments: Advertisment seq) =
+    advertisments
+    |> Seq.map (fun t -> fun () -> getContent (t, t.Url))
+    |> getAll

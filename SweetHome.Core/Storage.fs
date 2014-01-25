@@ -101,14 +101,10 @@ let refreshSubscriptions() =
         async { let client = new WebClient()
                 let! content = client.AsyncDownloadString(new Uri(url))
                 return context, content }
-    let getContent2 (context, url) =
-        let client = new WebClient()
-        let content = client.DownloadString(new Uri(url))
-        context, content
     let latestAdvertisments = 
         State.subscriptions
-        |> Seq.map (fun t -> fun () -> getContent2 (t.Value, t.Value.Url))
-        |> Getter.getAll
+        |> Seq.map (fun t -> t.Value)
+        |> Getter.getAllSubscriptions
         |> Array.map Parsing.parsePage
         |> List.concat
     let (existingAdvertisments, newAdvertisments) = latestAdvertisments |> List.partition State.containsAdvertisement
@@ -116,10 +112,7 @@ let refreshSubscriptions() =
         let enrichedAdvertisments = 
             newAdvertisments 
             |> Seq.distinctBy (fun t -> t.Url)
-            |> Seq.map (fun t -> t, t.Url) 
-            |> Seq.map getContent 
-            |> Async.Parallel
-            |> Async.RunSynchronously
+            |> Getter.getAllAdvertisments
             |> Array.map Parsing.enrichAdvertisment
         State.addAdvertisments enrichedAdvertisments
         State.saveAdvertisments()
