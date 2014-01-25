@@ -74,7 +74,7 @@ module private State =
 
     let addAdvertisement ad =
         let group = getGroup ad
-        group.Add(ad.Url, ad)
+        group.[ad.Url] <- ad
 
     let addOrigin ad =
         let group = getGroup ad
@@ -101,12 +101,14 @@ let refreshSubscriptions() =
         async { let client = new WebClient()
                 let! content = client.AsyncDownloadString(new Uri(url))
                 return context, content }
+    let getContent2 (context, url) =
+        let client = new WebClient()
+        let content = client.DownloadString(new Uri(url))
+        context, content
     let latestAdvertisments = 
         State.subscriptions
-        |> Seq.map (fun t -> t.Value, t.Value.Url)
-        |> Seq.map getContent
-        |> Async.Parallel
-        |> Async.RunSynchronously
+        |> Seq.map (fun t -> fun () -> getContent2 (t.Value, t.Value.Url))
+        |> Getter.getAll
         |> Array.map Parsing.parsePage
         |> List.concat
     let (existingAdvertisments, newAdvertisments) = latestAdvertisments |> List.partition State.containsAdvertisement
