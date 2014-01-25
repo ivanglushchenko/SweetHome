@@ -51,7 +51,7 @@
                 <ItemsControl x:Name="lbItems">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border x:Name="bd">
+                            <Border x:Name="bd" Background="Transparent">
                                 <Border BorderBrush="#ffc0c0c0" BorderThickness="0,0,0,1">
                                     <StackPanel Orientation="Horizontal">
                                         <!-- date -->
@@ -62,17 +62,21 @@
 
                                         <!-- price/bd-->
                                         <StackPanel Orientation="Horizontal" Width="60" VerticalAlignment="Center" Margin="20,0,0,0">
-                                            <TextBlock Text="$" TextBlock.FontSize="9" VerticalAlignment="Center"/>
+                                            <TextBlock Text="$" TextBlock.FontSize="10" Foreground="Gray" VerticalAlignment="Center"/>
                                             <TextBlock Text="{Binding Price.Value}" VerticalAlignment="Center"/>
-                                            <TextBlock Text="/" Margin="3,0" TextBlock.FontSize="8" VerticalAlignment="Center"/>
+                                            <TextBlock Text="/" Margin="3,0" TextBlock.FontSize="8" Foreground="Gray" VerticalAlignment="Center"/>
                                             <TextBlock Text="{Binding Bedrooms.Value}" VerticalAlignment="Center"/>
                                         </StackPanel>
 
-                                        <TextBlock Margin="20,0,0,0" VerticalAlignment="Center" Width="600">
-                                        <Hyperlink><Run Text="{Binding Caption, Mode=OneWay}"/></Hyperlink>
+                                        <TextBlock Margin="20,0,0,0" VerticalAlignment="Center" Width="400">
+                                            <Hyperlink Tag="{Binding Url}"><Run Text="{Binding Caption, Mode=OneTime}"/></Hyperlink>
                                         </TextBlock>
 
-                                        <TextBlock Text="{Binding Place}" VerticalAlignment="Center" Margin="20,0,0,0"/>
+                                        <TextBlock Text="{Binding Place}" Width="200" VerticalAlignment="Center" Margin="20,0,0,0"/>
+
+                                        <TextBlock Margin="20,0,0,0" VerticalAlignment="Center" Width="400">
+                                            <Hyperlink Tag="{Binding AddressUrl}"><Run Text="{Binding Address, Mode=OneTime}"/></Hyperlink>
+                                        </TextBlock>
                                     </StackPanel>
                                 </Border>
                             </Border>
@@ -81,6 +85,9 @@
                                 <Trigger Property="IsMouseOver" Value="True">
                                     <Setter TargetName="bd" Property="Background" Value="Yellow"/>
                                 </Trigger>
+                                <DataTrigger Binding="{Binding IsNew}" Value="True">
+                                    <Setter TargetName="bd" Property="TextBlock.FontWeight" Value="Bold"/>
+                                </DataTrigger>
                             </DataTemplate.Triggers>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>

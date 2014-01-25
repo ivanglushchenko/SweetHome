@@ -13,6 +13,7 @@ type Advertisment =
         LastAppearedAt: DateTime
         Map: string
         Address: string
+        AddressUrl: string
         Bedrooms: int option
         Content: string
         Images: string list
@@ -20,7 +21,8 @@ type Advertisment =
         SimiliarItemsTotal: int
         SimiliarItemsToday: int
         Phones: string list
-        Origins: HashSet<string> }
+        Origins: HashSet<string>
+        IsNew: bool }
     override x.ToString() = sprintf "[%O] %s (%O/%O) - %O" x.LastAppearedAt x.Caption x.Place x.Bedrooms x.Price
 
 let EmptyAdvertisment =
@@ -33,6 +35,7 @@ let EmptyAdvertisment =
         LastAppearedAt = DateTime.MinValue
         Map = ""
         Address = ""
+        AddressUrl = ""
         Bedrooms = None
         Content = ""
         Images = []
@@ -40,7 +43,8 @@ let EmptyAdvertisment =
         SimiliarItemsTotal = 0
         SimiliarItemsToday = 0
         Phones = []
-        Origins = HashSet<string>() }
+        Origins = HashSet<string>()
+        IsNew = false }
 
 type Subscription =
     {   Name: string

@@ -10,7 +10,7 @@ open Model
 
 let maxConnections = 10
 
-let mutable progressCallback: (int -> int -> unit) option = None
+let mutable progressCallback: (int -> int -> int -> unit) option = None
 
 let getAll (tasks: (unit -> 'v) seq) =
     let queuedItems = Queue<unit -> 'v>()
@@ -26,13 +26,13 @@ let getAll (tasks: (unit -> 'v) seq) =
         Array.init maxConnections (fun i -> match getNextTast() with | Some f -> (Task.Run f) :> Task | _ -> null)
         |> Array.filter (fun t -> t <> null)
 
-    let reportProgress i j =
+    let reportProgress i j k =
         match progressCallback with
-        | Some f -> f i j
+        | Some f -> f i j k
         | None -> ()
 
     let rec loop tasks =
-        reportProgress (queuedItems.Count + Array.length tasks) results.Count
+        reportProgress queuedItems.Count (Array.length tasks) results.Count
         let i = Task.WaitAny tasks
         results.Add((tasks.[i] :?> Task<'v>).Result)
         tasks.[i] <- null

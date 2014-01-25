@@ -10,12 +10,17 @@ let reUnicode = new Regex("""&#x[0-9]+;|&[a-zA-Z]+;""");
 let rePage = new Regex("""<p class="row"[^>]*>(\s)*<a[^>]*>(\s)*</a>(\s)*<span class="star"></span>(\s)*<span class="pl">(\s)*<span class="date">(?<date>[^<]*)</span>(\s)*<a href="(?<url>[^"]*)">(?<caption>[^<]*)</a>(\s)*</span>(\s)*<span[^>]*>(\s)*<span class="price">(?<price>[^<]*)</span>(\s)*/(?<bd>[^<]*)(\s)*-(\s)*<span class="pnr">((\s)*<small>(?<place>[^<]*)</small>(\s)*)?""")
 let reAdvertismentPostedDate = new Regex("""<p class="postinginfo">posted: <time datetime="(?<date>[^"]*)""")
 let reAdvertismentUpdatedDate = new Regex("""<p class="postinginfo">updated: <time datetime="(?<date>[^"]*)""")
+let reAddress = new Regex("""<p class="mapaddress">(?<address>[^<]*)<small>[^<]*<a target="_blank" href="(?<url>[^"]*)""")
 
-let trim (s: string) = 
-    s.Trim()
+let trim (s: string) =
+    if s = null
+    then s
+    else s.Trim()
 
 let toLower (s: string) = 
-    s.ToLower()
+    if s = null
+    then s
+    else s.ToLower()
 
 let toAscii (s: string) = 
     let sb = StringBuilder s
@@ -90,7 +95,8 @@ let parsePage (subscribtion, page) =
                             Price = tryParseFloat m.Groups.["price"].Value
                             Bedrooms = tryParseBedrooms m.Groups.["bd"].Value
                             Place = beautify m.Groups.["place"].Value
-                            Origins = HashSet<string>([ subscribtion.Name ]) } } |> List.ofSeq
+                            Origins = HashSet<string>([ subscribtion.Name ])
+                            IsNew = true } } |> List.ofSeq
     advertisments
 
 let enrichAdvertisment (advertisment, content) =
@@ -105,5 +111,7 @@ let enrichAdvertisment (advertisment, content) =
             (fun acc (re, groupName, f) -> update acc re groupName f) 
             advertisment
             [| reAdvertismentPostedDate, "date", fun t v -> let d = tryParseDate v |> Option.get in { t with FirstAppearedAt = d; LastAppearedAt = d }
-               reAdvertismentUpdatedDate, "date", fun t v -> { t with LastAppearedAt = tryParseDate v |> Option.get } |]
+               reAdvertismentUpdatedDate, "date", fun t v -> { t with LastAppearedAt = tryParseDate v |> Option.get }
+               reAddress, "address", fun t v -> { t with Address = trim v }
+               reAddress, "url", fun t v -> { t with AddressUrl = trim v } |]
     ret

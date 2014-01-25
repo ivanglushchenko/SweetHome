@@ -4,6 +4,7 @@ open FSharp.Data
 open System
 open System.IO
 open System.Net
+open System.Linq
 open System.Text.RegularExpressions
 open System.Collections.Generic
 open System.Runtime.Serialization.Formatters.Binary
@@ -49,7 +50,10 @@ module private State =
         let load (file: FileInfo) =
             async { use s = file.OpenRead()
                     let publishedAt = DateTime.Parse file.Name
-                    return publishedAt, binDeserialize s :?> Dictionary<string, Advertisment> }
+                    let dic = binDeserialize s :?> Dictionary<string, Advertisment>
+                    for pair in dic.ToList() do
+                        dic.[pair.Key] <- { pair.Value with IsNew = false }
+                    return publishedAt, dic }
         let groups =
             advertismentsDirectory.GetFiles()
             |> Seq.map load

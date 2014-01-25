@@ -20,8 +20,12 @@ type MainWindow = XAML<"MainWindow.xaml">
 let getUrl (source: DependencyObject) =
     let rec loop (s: DependencyObject) =
         match s with
+        | :? Hyperlink as hp -> if hp.Tag <> null then Some (hp.Tag.ToString()) else hp.Parent |> loop
         | :? FrameworkContentElement as r -> r.Parent |> loop
-        | :? FrameworkElement as fe -> (fe.DataContext :?> Model.Advertisment).Url |> Some
+        | :? FrameworkElement as fe ->
+            match fe.DataContext with
+            | :? Model.Advertisment as ad -> ad.Url |> Some
+            | _ -> None
         | _ -> None
     match source with
     | :? FrameworkContentElement as r -> loop r
@@ -51,7 +55,7 @@ let loadWindow() =
     let refreshItems() =
         window.bdWait.Visibility <- Visibility.Visible
         window.lblMessage.Text <- "Downloading subscriptions..."
-        Getter.progressCallback <- Some (fun i j -> invoke (fun () -> window.lblProgress.Text <- sprintf "%i in queue, %i completed" i j))
+        Getter.progressCallback <- Some (fun i j k -> invoke (fun () -> window.lblProgress.Text <- sprintf "%i in progress, %i in queue, %i completed" j i k))
         async { Storage.refreshSubscriptions()
                 invoke (fun () ->
                             items.Clear()
