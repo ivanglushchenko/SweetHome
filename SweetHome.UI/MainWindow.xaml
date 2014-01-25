@@ -3,87 +3,96 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="" Height="850" Width="1200">
 
-    <DockPanel Margin="10">
-        <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="0,0,0,10">
-            <Button x:Name="btnRefresh">refresh</Button>
-        </StackPanel>
-
-        <ScrollViewer DockPanel.Dock="Top" MaxHeight="500" Margin="0,0,0,10">
-            <StackPanel Orientation="Vertical">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Width="60">Origins:</TextBlock>
-                    <ItemsControl x:Name="lbFilterByOrigin" Margin="10,0,0,0">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <CheckBox Content="{Binding}" Margin="0,0,4,0" MinWidth="80">
-                                </CheckBox>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                    </ItemsControl>
-                </StackPanel>
-
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock  Width="60">Bedrooms:</TextBlock>
-                    <ItemsControl x:Name="lbFilterByBedrooms" Margin="10,0,0,0">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <CheckBox Content="{Binding}" Margin="0,0,4,0" MinWidth="80">
-                                </CheckBox>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                    </ItemsControl>
-                </StackPanel>
+    <Grid>
+        <DockPanel Margin="10">
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="0,0,0,10">
+                <Button x:Name="btnRefresh">refresh</Button>
             </StackPanel>
-        </ScrollViewer>
 
-        <ScrollViewer HorizontalScrollBarVisibility="Auto">
-            <ItemsControl x:Name="lbItems">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Border x:Name="bd">
-                            <Border BorderBrush="#ffc0c0c0" BorderThickness="0,0,0,1">
-                                <StackPanel Orientation="Horizontal">
-                                    <!-- date -->
-                                    <StackPanel Orientation="Vertical" Width="35" Margin="0,2">
-                                        <TextBlock Text="{Binding LastAppearedAt, StringFormat=MMM dd}" TextBlock.FontSize="12" HorizontalAlignment="Right"/>
-                                        <TextBlock Text="{Binding LastAppearedAt, StringFormat=HH:mm}"  TextBlock.FontSize="9" HorizontalAlignment="Right"/>
+            <ScrollViewer DockPanel.Dock="Top" MaxHeight="500" Margin="0,0,0,10">
+                <StackPanel Orientation="Vertical">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Width="60">Origins:</TextBlock>
+                        <ItemsControl x:Name="lbFilterByOrigin" Margin="10,0,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox Content="{Binding}" Margin="0,0,4,0" MinWidth="80">
+                                    </CheckBox>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock  Width="60">Bedrooms:</TextBlock>
+                        <ItemsControl x:Name="lbFilterByBedrooms" Margin="10,0,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox Content="{Binding}" Margin="0,0,4,0" MinWidth="80">
+                                    </CheckBox>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+
+            <ScrollViewer HorizontalScrollBarVisibility="Auto">
+                <ItemsControl x:Name="lbItems">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border x:Name="bd">
+                                <Border BorderBrush="#ffc0c0c0" BorderThickness="0,0,0,1">
+                                    <StackPanel Orientation="Horizontal">
+                                        <!-- date -->
+                                        <StackPanel Orientation="Vertical" Width="35" Margin="0,2">
+                                            <TextBlock Text="{Binding LastAppearedAt, StringFormat=MMM dd}" TextBlock.FontSize="12" HorizontalAlignment="Right"/>
+                                            <TextBlock Text="{Binding LastAppearedAt, StringFormat=HH:mm}"  TextBlock.FontSize="9" HorizontalAlignment="Right"/>
+                                        </StackPanel>
+
+                                        <!-- price/bd-->
+                                        <StackPanel Orientation="Horizontal" Width="60" VerticalAlignment="Center" Margin="20,0,0,0">
+                                            <TextBlock Text="$" TextBlock.FontSize="9" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Price.Value}" VerticalAlignment="Center"/>
+                                            <TextBlock Text="/" Margin="3,0" TextBlock.FontSize="8" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Bedrooms.Value}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+
+                                        <TextBlock Margin="20,0,0,0" VerticalAlignment="Center" Width="600">
+                                        <Hyperlink><Run Text="{Binding Caption, Mode=OneWay}"/></Hyperlink>
+                                        </TextBlock>
+
+                                        <TextBlock Text="{Binding Place}" VerticalAlignment="Center" Margin="20,0,0,0"/>
                                     </StackPanel>
-
-                                    <!-- price/bd-->
-                                    <StackPanel Orientation="Horizontal" Width="60" VerticalAlignment="Center" Margin="20,0,0,0">
-                                        <TextBlock Text="$" TextBlock.FontSize="9" VerticalAlignment="Center"/>
-                                        <TextBlock Text="{Binding Price.Value}" VerticalAlignment="Center"/>
-                                        <TextBlock Text="/" Margin="3,0" TextBlock.FontSize="8" VerticalAlignment="Center"/>
-                                        <TextBlock Text="{Binding Bedrooms.Value}" VerticalAlignment="Center"/>
-                                    </StackPanel>
-
-                                    <TextBlock Margin="20,0,0,0" VerticalAlignment="Center" Width="600">
-                                    <Hyperlink><Run Text="{Binding Caption, Mode=OneWay}"/></Hyperlink>
-                                    </TextBlock>
-
-                                    <TextBlock Text="{Binding Place}" VerticalAlignment="Center" Margin="20,0,0,0"/>
-                                </StackPanel>
+                                </Border>
                             </Border>
-                        </Border>
                         
-                        <DataTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="Yellow"/>
-                            </Trigger>
-                        </DataTemplate.Triggers>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
-    </DockPanel>
+                            <DataTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="Yellow"/>
+                                </Trigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </DockPanel>
+        
+        <Border HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="#80FFFFFF" x:Name="bdWait" Visibility="Collapsed">
+            <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock x:Name="lblMessage" HorizontalAlignment="Center"/>
+                <TextBlock x:Name="lblProgress" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+    </Grid>
 </Window>

@@ -41,16 +41,25 @@ let loadWindow() =
     Storage.addSubscription { Model.EmptySubscription with Name = "astoria"; Url = "http://newyork.craigslist.org/search/aap/que?zoomToPosting=&catAbb=aap&query=astoria&minAsk=1400&maxAsk=2100&bedrooms=1&housing_type=&excats="; BaseAddress = "http://newyork.craigslist.org" }
     Storage.addSubscription { Model.EmptySubscription with Name = "lic"; Url = "http://newyork.craigslist.org/search/aap/que?zoomToPosting=&catAbb=aap&query=long+island+city&minAsk=1400&maxAsk=2100&bedrooms=1&housing_type=&hasPic=1&excats="; BaseAddress = "http://newyork.craigslist.org" }
     
+    let invoke f =
+        window.Root.Dispatcher.BeginInvoke(new Action(f)) |> ignore
+
     let refreshFilters() =
         window.lbFilterByOrigin.ItemsSource <- (items |> Seq.collect (fun t -> t.Origins) |> Set.ofSeq).AsEnumerable()
         window.lbFilterByBedrooms.ItemsSource <- (items |> Seq.map (fun t -> t.Bedrooms) |> Set.ofSeq).AsEnumerable()
 
     let refreshItems() =
-        Storage.refreshSubscriptions()
-        items.Clear()
-        for ad in Storage.getLatest 1000 do
-            items.Add ad
-        refreshFilters()
+        window.bdWait.Visibility <- Visibility.Visible
+        window.lblMessage.Text <- "Downloading subscriptions..."
+        Getter.progressCallback <- Some (fun i j -> invoke (fun () -> window.lblProgress.Text <- sprintf "%i in queue, %i completed" i j))
+        async { Storage.refreshSubscriptions()
+                invoke (fun () ->
+                            items.Clear()
+                            for ad in Storage.getLatest 1000 do
+                                items.Add ad
+                            refreshFilters()
+                            window.bdWait.Visibility <- Visibility.Collapsed)
+                return () } |> Async.Start
 
     let resetFilter() =
         let check (ad: Model.Advertisment) =
