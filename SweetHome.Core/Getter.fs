@@ -8,7 +8,7 @@ open System.Threading.Tasks
 open System.Collections.Generic
 open Model
 
-let maxConnections = 10
+let maxConnections = 20
 
 let mutable progressCallback: (int -> int -> int -> unit) option = None
 

@@ -8,7 +8,7 @@ type Advertisment =
         Place: string
         Caption: string
         Specials: string
-        Price: float option
+        Price: int option
         FirstAppearedAt: DateTime
         LastAppearedAt: DateTime
         Map: string
@@ -22,6 +22,8 @@ type Advertisment =
         SimiliarItemsToday: int
         Phones: string list
         Origins: HashSet<string>
+
+        // UI-only properties. These properties should be in a viewmodel, but i am way too lazy for that
         IsNew: bool }
     override x.ToString() = sprintf "[%O] %s (%O/%O) - %O" x.LastAppearedAt x.Caption x.Place x.Bedrooms x.Price
 

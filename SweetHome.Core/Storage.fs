@@ -119,8 +119,9 @@ let refreshSubscriptions() =
             |> Getter.getAllAdvertisments
             |> Array.map Parsing.enrichAdvertisment
         State.addAdvertisments enrichedAdvertisments
-        State.saveAdvertisments()
     existingAdvertisments |> List.iter State.addOrigin
+    if newAdvertisments.Length > 0 || existingAdvertisments.Length > 0 then
+        State.saveAdvertisments()
 
 let addSubscription s =
     State.subscriptions.[s.Name] <- s
@@ -133,3 +134,6 @@ let getLatest n =
                 yield! groups.Head |> Seq.sortBy (fun t -> (DateTime.MaxValue.Subtract t.Value.LastAppearedAt).TotalDays) |> Seq.map (fun t -> t.Value)
                 yield! loadMore (n - m) groups.Tail }
     loadMore n (State.adGroups |> Seq.sortBy (fun t -> (DateTime.MaxValue.Subtract t.Key).TotalDays) |> Seq.map (fun t -> t.Value) |> Seq.toList) |> Seq.sortBy (fun t -> DateTime.MaxValue.Subtract t.LastAppearedAt)
+
+let markAsRead (ad: Advertisment) =
+    State.addAdvertisement { ad with IsNew = false }

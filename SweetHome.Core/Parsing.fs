@@ -11,6 +11,7 @@ let rePage = new Regex("""<p class="row"[^>]*>(\s)*<a[^>]*>(\s)*</a>(\s)*<span c
 let reAdvertismentPostedDate = new Regex("""<p class="postinginfo">posted: <time datetime="(?<date>[^"]*)""")
 let reAdvertismentUpdatedDate = new Regex("""<p class="postinginfo">updated: <time datetime="(?<date>[^"]*)""")
 let reAddress = new Regex("""<p class="mapaddress">(?<address>[^<]*)<small>[^<]*<a target="_blank" href="(?<url>[^"]*)""")
+let reBedroom = new Regex("""<p class="attrgroup"><span><b>(?<bd>[0-9]+)</b>BR""")
 
 let trim (s: string) =
     if s = null
@@ -72,12 +73,6 @@ let tryParseInt s =
     if success
     then Some res
     else None
-
-let tryParseBedrooms s =
-    let ts = (trim >> toLower) s
-    if ts.EndsWith "br"
-    then tryParseInt (ts.Substring(0, ts.Length - 2))
-    else None
     
 let parsePage (subscribtion, page) =
     let cleanedPage = toAscii page
@@ -92,8 +87,7 @@ let parsePage (subscribtion, page) =
                             FirstAppearedAt = publishedAt.Value
                             LastAppearedAt = publishedAt.Value
                             Caption = beautify m.Groups.["caption"].Value
-                            Price = tryParseFloat m.Groups.["price"].Value
-                            Bedrooms = tryParseBedrooms m.Groups.["bd"].Value
+                            Price = tryParseInt m.Groups.["price"].Value
                             Place = beautify m.Groups.["place"].Value
                             Origins = HashSet<string>([ subscribtion.Name ])
                             IsNew = true } } |> List.ofSeq
@@ -112,6 +106,7 @@ let enrichAdvertisment (advertisment, content) =
             advertisment
             [| reAdvertismentPostedDate, "date", fun t v -> let d = tryParseDate v |> Option.get in { t with FirstAppearedAt = d; LastAppearedAt = d }
                reAdvertismentUpdatedDate, "date", fun t v -> { t with LastAppearedAt = tryParseDate v |> Option.get }
-               reAddress, "address", fun t v -> { t with Address = trim v }
-               reAddress, "url", fun t v -> { t with AddressUrl = trim v } |]
+               reAddress, "address", fun t v -> { t with Address = (trim >> toLower) v }
+               reAddress, "url", fun t v -> { t with AddressUrl = (trim >> toLower) v }
+               reBedroom, "bd", fun t v -> { t with Bedrooms = tryParseInt v } |]
     ret
