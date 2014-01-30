@@ -7,21 +7,15 @@ type Advertisment =
     {   Url: string
         Place: string
         Caption: string
-        Specials: string
         Price: int option
         FirstAppearedAt: DateTime
         LastAppearedAt: DateTime
-        Map: string
         Address: string
         AddressUrl: string
         Bedrooms: int option
-        Content: string
-        Images: string list
-        SimiliarItems: string list
-        SimiliarItemsTotal: int
-        SimiliarItemsToday: int
-        Phones: string list
         Origins: HashSet<string>
+        Urls: HashSet<string>
+        CLTags: string
 
         // UI-only properties. These properties should be in a viewmodel, but i am way too lazy for that
         IsNew: bool }
@@ -31,36 +25,36 @@ let EmptyAdvertisment =
     {   Url = ""
         Place = ""
         Caption = ""
-        Specials = ""
         Price = None;
         FirstAppearedAt = DateTime.MinValue
         LastAppearedAt = DateTime.MinValue
-        Map = ""
         Address = ""
         AddressUrl = ""
         Bedrooms = None
-        Content = ""
-        Images = []
-        SimiliarItems = []
-        SimiliarItemsTotal = 0
-        SimiliarItemsToday = 0
-        Phones = []
         Origins = HashSet<string>()
+        Urls = HashSet<string>()
+        CLTags = ""
         IsNew = false }
 
 type Subscription =
     {   Name: string
-        Url: string
+        QueryUrl: string
         BaseAddress: string
         Ignores: string
-        Items: List<string>
         IsEnabled: bool }
 
 let EmptySubscription =
-    {   Name = "";
-        Url = "";
-        BaseAddress = "";
-        Ignores = "";
-        Items = List();
+    {   Name = ""
+        QueryUrl = ""
+        BaseAddress = ""
+        Ignores = ""
         IsEnabled = true }
 
+let reduce ad =
+    { EmptyAdvertisment with 
+        Bedrooms = ad.Bedrooms
+        Price = ad.Price
+        Caption = ad.Caption
+        CLTags = ad.CLTags; Place = ad.Place
+        Address = ad.Address
+        AddressUrl = ad.AddressUrl  }

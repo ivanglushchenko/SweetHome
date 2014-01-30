@@ -12,6 +12,7 @@ let reAdvertismentPostedDate = new Regex("""<p class="postinginfo">posted: <time
 let reAdvertismentUpdatedDate = new Regex("""<p class="postinginfo">updated: <time datetime="(?<date>[^"]*)""")
 let reAddress = new Regex("""<p class="mapaddress">(?<address>[^<]*)<small>[^<]*<a target="_blank" href="(?<url>[^"]*)""")
 let reBedroom = new Regex("""<p class="attrgroup"><span><b>(?<bd>[0-9]+)</b>BR""")
+let reCLTafs = new Regex("""<!-- START CLTAGS -->(?<body>[\s\S]*)<!-- END CLTAGS -->""")
 
 let trim (s: string) =
     if s = null
@@ -90,6 +91,7 @@ let parsePage (subscribtion, page) =
                             Price = tryParseInt m.Groups.["price"].Value
                             Place = beautify m.Groups.["place"].Value
                             Origins = HashSet<string>([ subscribtion.Name ])
+                            Urls = HashSet<string>([ subscribtion.BaseAddress + url ])
                             IsNew = true } } |> List.ofSeq
     advertisments
 
@@ -108,5 +110,6 @@ let enrichAdvertisment (advertisment, content) =
                reAdvertismentUpdatedDate, "date", fun t v -> { t with LastAppearedAt = tryParseDate v |> Option.get }
                reAddress, "address", fun t v -> { t with Address = (trim >> toLower) v }
                reAddress, "url", fun t v -> { t with AddressUrl = (trim >> toLower) v }
-               reBedroom, "bd", fun t v -> { t with Bedrooms = tryParseInt v } |]
+               reBedroom, "bd", fun t v -> { t with Bedrooms = tryParseInt v }
+               reCLTafs, "body", fun t v -> { t with CLTags = beautify v } |]
     ret

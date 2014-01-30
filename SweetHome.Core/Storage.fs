@@ -45,47 +45,51 @@ module private State =
         for s in tasks do
             d.Add(s.Name, s)
         d
-
-    let adGroups =
+        
+    let advertisments =
         let load (file: FileInfo) =
             async { use s = file.OpenRead()
-                    let publishedAt = DateTime.Parse file.Name
-                    let dic = binDeserialize s :?> Dictionary<string, Advertisment>
-                    for pair in dic.ToList() do
-                        dic.[pair.Key] <- { pair.Value with IsNew = false }
-                    return publishedAt, dic }
-        let groups =
+                    let list = binDeserialize s :?> Advertisment[]
+                    return list |> Seq.map (fun t -> { t with IsNew = false }) }
+        let ads =
             advertismentsDirectory.GetFiles()
             |> Seq.map load
             |> Async.Parallel
             |> Async.RunSynchronously
-        let dic = Dictionary<DateTime, Dictionary<string, Advertisment>>()
-        for dt, ads in groups do
-            dic.Add(dt, ads)
+            |> Seq.concat
+        let dic = Dictionary<Advertisment, Advertisment>()
+        for ad in ads do
+            dic.Add(reduce ad, ad)
         dic
 
-    let getGroup ad =
-        if adGroups.ContainsKey ad.LastAppearedAt.Date
-        then adGroups.[ad.LastAppearedAt.Date]
-        else
-            let d = Dictionary<string, Advertisment>()
-            adGroups.Add(ad.LastAppearedAt.Date, d)
-            d
+    let existingUrls =
+        let hs = HashSet<string>()
+        for p in advertisments do
+            hs.UnionWith p.Value.Urls
+        hs
 
     let containsAdvertisement ad =
-        let group = getGroup ad
-        group.ContainsKey ad.Url
+        existingUrls.Contains ad.Url
 
     let addAdvertisement ad =
-        let group = getGroup ad
-        group.[ad.Url] <- ad
-
-    let addOrigin ad =
-        let group = getGroup ad
-        group.[ad.Url].Origins.UnionWith ad.Origins
-
-    let addAdvertisments ads =
-        ads |> Seq.iter (addAdvertisement >> ignore)
+        let rad = reduce ad
+        if advertisments.ContainsKey rad
+        then
+            let existingAd = advertisments.[rad]
+            let mergedAd = 
+                { existingAd with 
+                    LastAppearedAt = max existingAd.LastAppearedAt ad.LastAppearedAt
+                    FirstAppearedAt = min existingAd.FirstAppearedAt ad.FirstAppearedAt }
+            mergedAd.Origins.UnionWith ad.Origins
+            mergedAd.Urls.UnionWith ad.Urls
+            existingUrls.UnionWith ad.Urls
+            if Option.isNone mergedAd.Bedrooms 
+            then printfn "dddd"
+            advertisments.[rad] <- mergedAd
+        else
+            if Option.isNone ad.Bedrooms 
+            then printfn "dddd"
+            advertisments.Add(rad, ad)
 
     let saveSubscriptions() =
         for subscription in subscriptions do
@@ -94,33 +98,26 @@ module private State =
             binSerialize fs subscription.Value
              
     let saveAdvertisments() =
-        for group in adGroups do
-            let fileName = Path.Combine(advertismentsDirectory.FullName, group.Key.ToString("yyyy-MM-dd"))
-            use fs = new FileStream(fileName, FileMode.Create)
-            group.Value |> binSerialize fs
-            fs.Dispose()
+        let fileName = Path.Combine(advertismentsDirectory.FullName, "all")
+        use fs = new FileStream(fileName, FileMode.Create)
+        advertisments |> Seq.map (fun t -> t.Value) |> Array.ofSeq |> binSerialize fs
+        fs.Dispose()
 
 let refreshSubscriptions() =
-    let getContent (context, url) =
-        async { let client = new WebClient()
-                let! content = client.AsyncDownloadString(new Uri(url))
-                return context, content }
     let latestAdvertisments = 
         State.subscriptions
         |> Seq.map (fun t -> t.Value)
         |> Getter.getAllSubscriptions
         |> Array.map Parsing.parsePage
         |> List.concat
-    let (existingAdvertisments, newAdvertisments) = latestAdvertisments |> List.partition State.containsAdvertisement
+    let newAdvertisments = latestAdvertisments |> List.filter State.containsAdvertisement
     if newAdvertisments.Length > 0 then
         let enrichedAdvertisments = 
             newAdvertisments 
             |> Seq.distinctBy (fun t -> t.Url)
             |> Getter.getAllAdvertisments
             |> Array.map Parsing.enrichAdvertisment
-        State.addAdvertisments enrichedAdvertisments
-    existingAdvertisments |> List.iter State.addOrigin
-    if newAdvertisments.Length > 0 || existingAdvertisments.Length > 0 then
+        enrichedAdvertisments |> Seq.iter State.addAdvertisement
         State.saveAdvertisments()
 
 let addSubscription s =
@@ -128,12 +125,12 @@ let addSubscription s =
     State.saveSubscriptions()
 
 let getLatest n =
-    let rec loadMore n (groups: Dictionary<string, Advertisment> list) = 
-        seq { if n > 0 && groups.IsEmpty = false then
-                let m = min n groups.Head.Count
-                yield! groups.Head |> Seq.sortBy (fun t -> (DateTime.MaxValue.Subtract t.Value.LastAppearedAt).TotalDays) |> Seq.map (fun t -> t.Value)
-                yield! loadMore (n - m) groups.Tail }
-    loadMore n (State.adGroups |> Seq.sortBy (fun t -> (DateTime.MaxValue.Subtract t.Key).TotalDays) |> Seq.map (fun t -> t.Value) |> Seq.toList) |> Seq.sortBy (fun t -> DateTime.MaxValue.Subtract t.LastAppearedAt)
+    let m = min n State.advertisments.Count
+    State.advertisments
+    |> Seq.map (fun t -> t.Value)
+    |> Seq.sortBy (fun t -> DateTime.MaxValue.Subtract t.LastAppearedAt)
+    |> Seq.take m
 
 let markAsRead (ad: Advertisment) =
-    State.addAdvertisement { ad with IsNew = false }
+    let rad = reduce ad
+    State.advertisments.[rad] <- { State.advertisments.[rad] with IsNew = false }

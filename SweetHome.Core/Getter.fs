@@ -55,10 +55,10 @@ let getContent (context, url) =
 
 let getAllSubscriptions subscriptions =
     subscriptions
-    |> Seq.map (fun t -> fun () -> getContent (t, t.Url))
+    |> Seq.map (fun t -> fun () -> getContent (t, t.QueryUrl))
     |> getAll
 
-let getAllAdvertisments (advertisments: Advertisment seq) =
+let getAllAdvertisments advertisments =
     advertisments
     |> Seq.map (fun t -> fun () -> getContent (t, t.Url))
     |> getAll

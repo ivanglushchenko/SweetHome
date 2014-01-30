@@ -52,7 +52,7 @@
                 </StackPanel>
             </ScrollViewer>
 
-            <ScrollViewer HorizontalScrollBarVisibility="Auto">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" x:Name="svItems">
                 <ItemsControl x:Name="lbItems">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
@@ -60,7 +60,7 @@
                                 <Border BorderBrush="#ffc0c0c0" BorderThickness="0,0,0,1" Margin="10,0">
                                     <StackPanel Orientation="Horizontal">
                                         <!-- date -->
-                                        <StackPanel Orientation="Vertical" Width="35" Margin="0,2">
+                                        <StackPanel Orientation="Vertical" Width="38" Margin="0,2">
                                             <TextBlock Text="{Binding LastAppearedAt, StringFormat=MMM dd}" TextBlock.FontSize="12" HorizontalAlignment="Right"/>
                                             <TextBlock Text="{Binding LastAppearedAt, StringFormat=HH:mm}"  TextBlock.FontSize="9" HorizontalAlignment="Right"/>
                                         </StackPanel>
