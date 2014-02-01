@@ -1,7 +1,12 @@
 ﻿module Model
 
 open System
+open System.ComponentModel
 open System.Collections.Generic
+
+let AdvertismentChanged = new Event<_,_>()
+let IsNewPropertyStore = Dictionary<obj, bool>()
+let IsDuplicatedPropertyStore = Dictionary<obj, bool>()
 
 type Advertisment =
     {   Url: string
@@ -16,10 +21,28 @@ type Advertisment =
         Origins: HashSet<string>
         Urls: HashSet<string>
         CLTags: string
+        IsDuplicated: bool }
 
-        // UI-only properties. These properties should be in a viewmodel, but i am way too lazy for that
-        IsNew: bool }
     override x.ToString() = sprintf "[%O] %s (%O/%O) - %O" x.LastAppearedAt x.Caption x.Place x.Bedrooms x.Price
+
+    interface INotifyPropertyChanged with
+        [<CLIEvent>]
+        member x.PropertyChanged = AdvertismentChanged.Publish
+
+    // UI-only properties. These properties should be in a viewmodel, but i am way too lazy for that
+    member x.IsNew 
+        with get() =
+            if IsNewPropertyStore.ContainsKey x then IsNewPropertyStore.[x] else false
+        and set(v) =
+            IsNewPropertyStore.[x] <- v
+            AdvertismentChanged.Trigger(x, PropertyChangedEventArgs("IsNew"))
+
+//    member x.IsDuplicated 
+//        with get() =
+//            if IsDuplicatedPropertyStore.ContainsKey x then IsDuplicatedPropertyStore.[x] else false
+//        and set(v) =
+//            IsDuplicatedPropertyStore.[x] <- v
+//            AdvertismentChanged.Trigger(x, PropertyChangedEventArgs("IsDuplicated"))
 
 let EmptyAdvertisment =
     {   Url = ""
@@ -34,7 +57,7 @@ let EmptyAdvertisment =
         Origins = HashSet<string>()
         Urls = HashSet<string>()
         CLTags = ""
-        IsNew = false }
+        IsDuplicated = false }
 
 type Subscription =
     {   Name: string

@@ -91,8 +91,7 @@ let parsePage (subscribtion, page) =
                             Price = tryParseInt m.Groups.["price"].Value
                             Place = beautify m.Groups.["place"].Value
                             Origins = HashSet<string>([ subscribtion.Name ])
-                            Urls = HashSet<string>([ subscribtion.BaseAddress + url ])
-                            IsNew = true } } |> List.ofSeq
+                            Urls = HashSet<string>([ subscribtion.BaseAddress + url ]) } } |> List.ofSeq
     advertisments
 
 let enrichAdvertisment (advertisment, content) =
@@ -102,14 +101,12 @@ let enrichAdvertisment (advertisment, content) =
         then f adv m.Groups.[groupName].Value
         else adv
 
-    let ret =
-        Array.fold 
-            (fun acc (re, groupName, f) -> update acc re groupName f) 
-            advertisment
-            [| reAdvertismentPostedDate, "date", fun t v -> let d = tryParseDate v |> Option.get in { t with FirstAppearedAt = d; LastAppearedAt = d }
-               reAdvertismentUpdatedDate, "date", fun t v -> { t with LastAppearedAt = tryParseDate v |> Option.get }
-               reAddress, "address", fun t v -> { t with Address = (trim >> toLower) v }
-               reAddress, "url", fun t v -> { t with AddressUrl = (trim >> toLower) v }
-               reBedroom, "bd", fun t v -> { t with Bedrooms = tryParseInt v }
-               reCLTafs, "body", fun t v -> { t with CLTags = beautify v } |]
-    ret
+    Array.fold 
+        (fun acc (re, groupName, f) -> update acc re groupName f) 
+        advertisment
+        [| reAdvertismentPostedDate, "date", fun t v -> let d = tryParseDate v |> Option.get in { t with FirstAppearedAt = d; LastAppearedAt = d }
+           reAdvertismentUpdatedDate, "date", fun t v -> { t with LastAppearedAt = tryParseDate v |> Option.get }
+           reAddress, "address", fun t v -> { t with Address = (trim >> toLower) v }
+           reAddress, "url", fun t v -> { t with AddressUrl = (trim >> toLower) v }
+           reBedroom, "bd", fun t v -> { t with Bedrooms = tryParseInt v }
+           reCLTafs, "body", fun t v -> { t with CLTags = beautify v } |]

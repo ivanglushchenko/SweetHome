@@ -46,50 +46,79 @@ module private State =
             d.Add(s.Name, s)
         d
         
+    let markSimiliarAds ads =
+        let dic = Dictionary<string, List<Advertisment>>()
+        for ad in ads do
+            let key = sprintf "%O:%O:%O:%O:%O:%O:%O" ad.Bedrooms ad.Price ad.Caption ad.Place ad.Address ad.AddressUrl ad.CLTags
+            if dic.ContainsKey key = false then
+                dic.Add(key, List())
+            dic.[key].Add ad
+        let mark g =
+            let s = g |> Seq.sortBy (fun t -> -t.LastAppearedAt.Ticks) |> Seq.toList
+            let dateMin = s |> Seq.map (fun t -> t.FirstAppearedAt) |> Seq.min
+            
+            //for i in s.Tail do
+            //    i.IsDuplicated <- true
+            if (Seq.head g).Url = "http://newyork.craigslist.org/brk/fee/4287311875.html" then
+                printfn "fff"
+            let f = s |> Seq.map (fun t -> { t with FirstAppearedAt = dateMin; IsDuplicated = t <> s.Head })
+            f
+        dic |> Seq.collect (fun t -> mark t.Value)
+
     let advertisments =
         let load (file: FileInfo) =
             async { use s = file.OpenRead()
                     let list = binDeserialize s :?> Advertisment[]
-                    return list |> Seq.map (fun t -> { t with IsNew = false }) }
+                    for a in list do
+                        a.IsNew <- false
+                    return list }
         let ads =
             advertismentsDirectory.GetFiles()
             |> Seq.map load
             |> Async.Parallel
             |> Async.RunSynchronously
             |> Seq.concat
-        let dic = Dictionary<Advertisment, Advertisment>()
-        for ad in ads do
-            dic.Add(reduce ad, ad)
-        dic
+        List(markSimiliarAds ads)
 
-    let existingUrls =
-        let hs = HashSet<string>()
+    let advertismentsByUrl =
+        let hs = Dictionary<string, Advertisment>()
         for p in advertisments do
-            hs.UnionWith p.Value.Urls
+            hs.Add(p.Url, p)
+
+        let key ad = sprintf "%O:%O:%O:%O:%O:%O:%O" ad.Bedrooms ad.Price ad.Caption ad.Place ad.Address ad.AddressUrl ad.CLTags
+        let t1 = hs.["http://newyork.craigslist.org/brk/fee/4287311875.html"]
+        let t2 = hs.["http://newyork.craigslist.org/brk/fee/4282967045.html"]
+        let r1 = key t1
+        let r2 = key t2
         hs
 
     let containsAdvertisement ad =
-        existingUrls.Contains ad.Url
+        advertismentsByUrl.ContainsKey ad.Url
 
     let addAdvertisement ad =
-        let rad = reduce ad
-        if advertisments.ContainsKey rad
-        then
-            let existingAd = advertisments.[rad]
-            let mergedAd = 
-                { existingAd with 
-                    LastAppearedAt = max existingAd.LastAppearedAt ad.LastAppearedAt
-                    FirstAppearedAt = min existingAd.FirstAppearedAt ad.FirstAppearedAt }
-            mergedAd.Origins.UnionWith ad.Origins
-            mergedAd.Urls.UnionWith ad.Urls
-            existingUrls.UnionWith ad.Urls
-            if Option.isNone mergedAd.Bedrooms 
-            then printfn "dddd"
-            advertisments.[rad] <- mergedAd
-        else
-            if Option.isNone ad.Bedrooms 
-            then printfn "dddd"
-            advertisments.Add(rad, ad)
+        advertisments.Add ad
+        advertismentsByUrl.Add(ad.Url, ad)
+        ad.IsNew <- true
+
+
+//    let addAdvertisement ad =
+//        let rad = reduce ad
+//        if advertisments.ContainsKey rad
+//        then
+//            let existingAd = advertisments.[rad]
+//            let mergedAd = 
+//                { existingAd with 
+//                    LastAppearedAt = max existingAd.LastAppearedAt ad.LastAppearedAt
+//                    FirstAppearedAt = min existingAd.FirstAppearedAt ad.FirstAppearedAt }
+//            mergedAd.Origins.UnionWith ad.Origins
+//            mergedAd.Urls.UnionWith ad.Urls
+//            existingUrls.UnionWith ad.Urls
+//            advertisments.[rad] <- mergedAd
+//        else
+//            advertisments.Add(rad, ad)
+
+    let addOrigin ad =
+        advertismentsByUrl.[ad.Url].Origins.UnionWith ad.Origins
 
     let saveSubscriptions() =
         for subscription in subscriptions do
@@ -100,7 +129,7 @@ module private State =
     let saveAdvertisments() =
         let fileName = Path.Combine(advertismentsDirectory.FullName, "all")
         use fs = new FileStream(fileName, FileMode.Create)
-        advertisments |> Seq.map (fun t -> t.Value) |> Array.ofSeq |> binSerialize fs
+        advertisments |> Array.ofSeq |> binSerialize fs
         fs.Dispose()
 
 let refreshSubscriptions() =
@@ -110,7 +139,9 @@ let refreshSubscriptions() =
         |> Getter.getAllSubscriptions
         |> Array.map Parsing.parsePage
         |> List.concat
-    let newAdvertisments = latestAdvertisments |> List.filter State.containsAdvertisement
+    let (existingAdvertisments, newAdvertisments) = latestAdvertisments |> List.partition State.containsAdvertisement
+    for ad in existingAdvertisments do
+        State.addOrigin ad
     if newAdvertisments.Length > 0 then
         let enrichedAdvertisments = 
             newAdvertisments 
@@ -118,6 +149,7 @@ let refreshSubscriptions() =
             |> Getter.getAllAdvertisments
             |> Array.map Parsing.enrichAdvertisment
         enrichedAdvertisments |> Seq.iter State.addAdvertisement
+    if existingAdvertisments.Length > 0 || newAdvertisments.Length > 0 then
         State.saveAdvertisments()
 
 let addSubscription s =
@@ -127,10 +159,5 @@ let addSubscription s =
 let getLatest n =
     let m = min n State.advertisments.Count
     State.advertisments
-    |> Seq.map (fun t -> t.Value)
     |> Seq.sortBy (fun t -> DateTime.MaxValue.Subtract t.LastAppearedAt)
     |> Seq.take m
-
-let markAsRead (ad: Advertisment) =
-    let rad = reduce ad
-    State.advertisments.[rad] <- { State.advertisments.[rad] with IsNew = false }

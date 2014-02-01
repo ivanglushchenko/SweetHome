@@ -20,7 +20,7 @@ type MainWindow = XAML<"MainWindow.xaml">
 
 let loadWindow() =
     //Storage.addSubscription { Model.EmptySubscription with Name = "astoria";  QueryUrl = "http://newyork.craigslist.org/search/aap/que?zoomToPosting=&catAbb=aap&query=astoria&minAsk=1400&maxAsk=2100&bedrooms=1&housing_type=&excats="; BaseAddress = "http://newyork.craigslist.org" }
-    Storage.addSubscription { Model.EmptySubscription with Name = "brighton"; QueryUrl = "http://newyork.craigslist.org/search/aap/brk?zoomToPosting=&catAbb=aap&query=brighton+beach&minAsk=1400&maxAsk=2100&bedrooms=1&housing_type=&excats="; BaseAddress = "http://newyork.craigslist.org" }
+    //Storage.addSubscription { Model.EmptySubscription with Name = "brighton"; QueryUrl = "http://newyork.craigslist.org/search/aap/brk?zoomToPosting=&catAbb=aap&query=brighton+beach&minAsk=1400&maxAsk=2100&bedrooms=1&housing_type=&excats="; BaseAddress = "http://newyork.craigslist.org" }
     //Storage.addSubscription { Model.EmptySubscription with Name = "kings hwy"; QueryUrl = "http://newyork.craigslist.org/search/aap/brk?zoomToPosting=&catAbb=aap&query=kings+highway&minAsk=1400&maxAsk=2100&bedrooms=1&housing_type=&hasPic=1&excats="; BaseAddress = "http://newyork.craigslist.org" }
     //Storage.addSubscription { Model.EmptySubscription with Name = "lic"; QueryUrl = "http://newyork.craigslist.org/search/aap/que?zoomToPosting=&catAbb=aap&query=long+island+city&minAsk=1400&maxAsk=2100&bedrooms=1&housing_type=&hasPic=1&excats="; BaseAddress = "http://newyork.craigslist.org" }
     //Storage.addSubscription { Model.EmptySubscription with Name = "midwood"; QueryUrl = "http://newyork.craigslist.org/search/aap/brk?zoomToPosting=&catAbb=aap&query=midwood&minAsk=1400&maxAsk=2100&bedrooms=1&housing_type=&hasPic=1&excats="; BaseAddress = "http://newyork.craigslist.org" }
@@ -29,11 +29,6 @@ let loadWindow() =
     let window = MainWindow()
     let items = ObservableCollection<Model.Advertisment>(Storage.getLatest 1000)
     let itemsView = ListCollectionView(items)
-
-    //let t = items |> Seq.take 2 |> Seq.toList
-    //let r1 = reduce t.Head
-    //let r2 = reduce t.Tail.Head
-
 
     let includedOrigins = HashSet<string>()
     let includedBedrooms = HashSet<int option>()
@@ -76,11 +71,13 @@ let loadWindow() =
         Process.Start(url.ToString()) |> ignore
 
     let markAsRead (ad: Advertisment) =
+        ad.IsNew <- false
+        window.lbItems.SelectedItem <- ad
         //let offset = window.svItems.HorizontalOffset
         //Storage.markAsRead ad
         //refreshItems()
         //window.svItems.set <- offset
-        ()
+        //()
 
     let openDetails (ad: Advertisment) =
         openUrl ad.Url
