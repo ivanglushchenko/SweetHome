@@ -19,13 +19,6 @@ open Model
 type MainWindow = XAML<"MainWindow.xaml">
 
 let loadWindow() =
-    //Storage.addSubscription { Model.EmptySubscription with Name = "astoria";  QueryUrl = "http://newyork.craigslist.org/search/aap/que?zoomToPosting=&catAbb=aap&query=astoria&minAsk=1400&maxAsk=2100&bedrooms=1&housing_type=&excats="; BaseAddress = "http://newyork.craigslist.org" }
-    //Storage.addSubscription { Model.EmptySubscription with Name = "brighton"; QueryUrl = "http://newyork.craigslist.org/search/aap/brk?zoomToPosting=&catAbb=aap&query=brighton+beach&minAsk=1400&maxAsk=2100&bedrooms=1&housing_type=&excats="; BaseAddress = "http://newyork.craigslist.org" }
-    //Storage.addSubscription { Model.EmptySubscription with Name = "kings hwy"; QueryUrl = "http://newyork.craigslist.org/search/aap/brk?zoomToPosting=&catAbb=aap&query=kings+highway&minAsk=1400&maxAsk=2100&bedrooms=1&housing_type=&hasPic=1&excats="; BaseAddress = "http://newyork.craigslist.org" }
-    //Storage.addSubscription { Model.EmptySubscription with Name = "lic"; QueryUrl = "http://newyork.craigslist.org/search/aap/que?zoomToPosting=&catAbb=aap&query=long+island+city&minAsk=1400&maxAsk=2100&bedrooms=1&housing_type=&hasPic=1&excats="; BaseAddress = "http://newyork.craigslist.org" }
-    //Storage.addSubscription { Model.EmptySubscription with Name = "midwood"; QueryUrl = "http://newyork.craigslist.org/search/aap/brk?zoomToPosting=&catAbb=aap&query=midwood&minAsk=1400&maxAsk=2100&bedrooms=1&housing_type=&hasPic=1&excats="; BaseAddress = "http://newyork.craigslist.org" }
-    //Storage.addSubscription { Model.EmptySubscription with Name = "steinway"; QueryUrl = "http://newyork.craigslist.org/search/aap/que?zoomToPosting=&catAbb=aap&query=steinway&minAsk=1400&maxAsk=2100&bedrooms=1&housing_type=&excats="; BaseAddress = "http://newyork.craigslist.org" }
-
     let window = MainWindow()
     let items = ObservableCollection<Model.Advertisment>(Storage.getLatest 1000)
     let itemsView = ListCollectionView(items)
@@ -73,11 +66,6 @@ let loadWindow() =
     let markAsRead (ad: Advertisment) =
         ad.IsNew <- false
         window.lbItems.SelectedItem <- ad
-        //let offset = window.svItems.HorizontalOffset
-        //Storage.markAsRead ad
-        //refreshItems()
-        //window.svItems.set <- offset
-        //()
 
     let openDetails (ad: Advertisment) =
         openUrl ad.Url

@@ -56,13 +56,7 @@ module private State =
         let mark g =
             let s = g |> Seq.sortBy (fun t -> -t.LastAppearedAt.Ticks) |> Seq.toList
             let dateMin = s |> Seq.map (fun t -> t.FirstAppearedAt) |> Seq.min
-            
-            //for i in s.Tail do
-            //    i.IsDuplicated <- true
-            if (Seq.head g).Url = "http://newyork.craigslist.org/brk/fee/4287311875.html" then
-                printfn "fff"
-            let f = s |> Seq.map (fun t -> { t with FirstAppearedAt = dateMin; IsDuplicated = t <> s.Head })
-            f
+            s |> Seq.map (fun t -> { t with FirstAppearedAt = dateMin; IsDuplicated = t <> s.Head })
         dic |> Seq.collect (fun t -> mark t.Value)
 
     let advertisments =
@@ -84,12 +78,6 @@ module private State =
         let hs = Dictionary<string, Advertisment>()
         for p in advertisments do
             hs.Add(p.Url, p)
-
-        let key ad = sprintf "%O:%O:%O:%O:%O:%O:%O" ad.Bedrooms ad.Price ad.Caption ad.Place ad.Address ad.AddressUrl ad.CLTags
-        let t1 = hs.["http://newyork.craigslist.org/brk/fee/4287311875.html"]
-        let t2 = hs.["http://newyork.craigslist.org/brk/fee/4282967045.html"]
-        let r1 = key t1
-        let r2 = key t2
         hs
 
     let containsAdvertisement ad =
@@ -99,23 +87,6 @@ module private State =
         advertisments.Add ad
         advertismentsByUrl.Add(ad.Url, ad)
         ad.IsNew <- true
-
-
-//    let addAdvertisement ad =
-//        let rad = reduce ad
-//        if advertisments.ContainsKey rad
-//        then
-//            let existingAd = advertisments.[rad]
-//            let mergedAd = 
-//                { existingAd with 
-//                    LastAppearedAt = max existingAd.LastAppearedAt ad.LastAppearedAt
-//                    FirstAppearedAt = min existingAd.FirstAppearedAt ad.FirstAppearedAt }
-//            mergedAd.Origins.UnionWith ad.Origins
-//            mergedAd.Urls.UnionWith ad.Urls
-//            existingUrls.UnionWith ad.Urls
-//            advertisments.[rad] <- mergedAd
-//        else
-//            advertisments.Add(rad, ad)
 
     let addOrigin ad =
         advertismentsByUrl.[ad.Url].Origins.UnionWith ad.Origins

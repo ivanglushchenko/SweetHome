@@ -6,7 +6,6 @@ open System.Collections.Generic
 
 let AdvertismentChanged = new Event<_,_>()
 let IsNewPropertyStore = Dictionary<obj, bool>()
-let IsDuplicatedPropertyStore = Dictionary<obj, bool>()
 
 type Advertisment =
     {   Url: string
@@ -36,13 +35,6 @@ type Advertisment =
         and set(v) =
             IsNewPropertyStore.[x] <- v
             AdvertismentChanged.Trigger(x, PropertyChangedEventArgs("IsNew"))
-
-//    member x.IsDuplicated 
-//        with get() =
-//            if IsDuplicatedPropertyStore.ContainsKey x then IsDuplicatedPropertyStore.[x] else false
-//        and set(v) =
-//            IsDuplicatedPropertyStore.[x] <- v
-//            AdvertismentChanged.Trigger(x, PropertyChangedEventArgs("IsDuplicated"))
 
 let EmptyAdvertisment =
     {   Url = ""
