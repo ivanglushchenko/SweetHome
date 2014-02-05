@@ -9,100 +9,112 @@
     </Window.Resources>
     
     <Grid>
-        <DockPanel>
-            <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="10,10,10,10">
-                <Button x:Name="btnRefresh">refresh</Button>
-            </StackPanel>
-
-            <ScrollViewer DockPanel.Dock="Top" MaxHeight="500" Margin="10,0,10,10" VerticalScrollBarVisibility="Auto">
-                <StackPanel Orientation="Vertical">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Width="60">Origins:</TextBlock>
-                        <ItemsControl x:Name="lbFilterByOrigin" Margin="10,0,0,0">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <CheckBox Content="{Binding}" Margin="0,0,4,0" MinWidth="80">
-                                    </CheckBox>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                        </ItemsControl>
+        <TabControl TabStripPlacement="Bottom">
+            <TabItem Header="Advertisments">
+                <DockPanel>
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="10,10,10,10">
+                        <Button x:Name="btnRefresh">refresh</Button>
                     </StackPanel>
 
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock  Width="60">Bedrooms:</TextBlock>
-                        <ItemsControl x:Name="lbFilterByBedrooms" Margin="10,0,0,0">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <CheckBox Content="{Binding}" Margin="0,0,4,0" MinWidth="80">
-                                    </CheckBox>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                        </ItemsControl>
-                    </StackPanel>
-                </StackPanel>
-            </ScrollViewer>
+                    <ScrollViewer DockPanel.Dock="Top" MaxHeight="500" Margin="10,0,10,10" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Orientation="Vertical">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Width="60">Origins:</TextBlock>
+                                <ItemsControl x:Name="lbFilterByOrigin" Margin="10,0,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <CheckBox Content="{Binding}" Margin="0,0,4,0" MinWidth="80">
+                                            </CheckBox>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+                            </StackPanel>
 
-            <ListBox x:Name="lbItems">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Border x:Name="bd" Background="Transparent">
-                            <Border BorderBrush="#ffc0c0c0" BorderThickness="0,0,0,1" Margin="10,0,10,0">
-                                <StackPanel Orientation="Horizontal">
-                                    <!-- date -->
-                                    <StackPanel Orientation="Vertical" Width="38" Margin="0,2">
-                                        <TextBlock Text="{Binding LastAppearedAt, StringFormat=MMM dd}" TextBlock.FontSize="12" HorizontalAlignment="Right"/>
-                                        <TextBlock Text="{Binding LastAppearedAt, StringFormat=HH:mm}"  TextBlock.FontSize="9" HorizontalAlignment="Right"/>
-                                    </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock  Width="60">Bedrooms:</TextBlock>
+                                <ItemsControl x:Name="lbFilterByBedrooms" Margin="10,0,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <CheckBox Content="{Binding}" Margin="0,0,4,0" MinWidth="80">
+                                            </CheckBox>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
 
-                                    <!-- price/bd-->
-                                    <StackPanel Orientation="Horizontal" Width="60" VerticalAlignment="Center" Margin="20,0,0,0">
-                                        <TextBlock Text="$" TextBlock.FontSize="10" Foreground="Gray" VerticalAlignment="Center"/>
-                                        <TextBlock Text="{Binding Price.Value}" VerticalAlignment="Center"/>
-                                        <TextBlock Text="/" Margin="3,0" TextBlock.FontSize="8" Foreground="Gray" VerticalAlignment="Center"/>
-                                        <TextBlock Text="{Binding Bedrooms.Value}" VerticalAlignment="Center" FontSize="11"/>
-                                    </StackPanel>
+                    <ListBox x:Name="lbItems" BorderThickness="0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border x:Name="bd" Background="Transparent">
+                                    <Border BorderBrush="#ffc0c0c0" BorderThickness="0,0,0,1" Margin="10,0,10,0">
+                                        <StackPanel Orientation="Horizontal">
+                                            <!-- date -->
+                                            <StackPanel Orientation="Vertical" Width="38" Margin="0,2">
+                                                <TextBlock Text="{Binding LastAppearedAt, StringFormat=MMM dd}" TextBlock.FontSize="12" HorizontalAlignment="Right"/>
+                                                <TextBlock Text="{Binding LastAppearedAt, StringFormat=HH:mm}"  TextBlock.FontSize="9" HorizontalAlignment="Right"/>
+                                            </StackPanel>
 
-                                    <TextBlock Margin="0,0,0,0" Text="{Binding Converter={StaticResource AdvertismentAgeConverter}}" FontSize="11" VerticalAlignment="Center" TextAlignment="Right" Width="20"/>
+                                            <!-- price/bd-->
+                                            <StackPanel Orientation="Horizontal" Width="60" VerticalAlignment="Center" Margin="20,0,0,0">
+                                                <TextBlock Text="$" TextBlock.FontSize="10" Foreground="Gray" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding Price.Value}" VerticalAlignment="Center"/>
+                                                <TextBlock Text="/" Margin="3,0" TextBlock.FontSize="8" Foreground="Gray" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding Bedrooms.Value}" VerticalAlignment="Center" FontSize="11"/>
+                                            </StackPanel>
 
-                                    <TextBlock Margin="15,0,0,0" VerticalAlignment="Center" Width="450">
-                                            <Hyperlink x:Name="hlink" Tag="{Binding Url}" Command="NavigationCommands.GoToPage" CommandParameter="{Binding}"><Run Text="{Binding Caption, Mode=OneTime}"/></Hyperlink>
-                                    </TextBlock>
+                                            <TextBlock Margin="0,0,0,0" Text="{Binding Converter={StaticResource AdvertismentAgeConverter}}" FontSize="11" VerticalAlignment="Center" TextAlignment="Right" Width="20"/>
 
-                                    <TextBlock Text="{Binding Place}" Width="250" VerticalAlignment="Center" Margin="20,0,0,0"/>
+                                            <TextBlock Margin="15,0,0,0" VerticalAlignment="Center" Width="450">
+                                                <Hyperlink x:Name="hlink" Tag="{Binding Url}" Command="NavigationCommands.GoToPage" CommandParameter="{Binding}"><Run Text="{Binding Caption, Mode=OneTime}"/></Hyperlink>
+                                            </TextBlock>
 
-                                    <TextBlock Margin="20,0,0,0" VerticalAlignment="Center" Width="200">
-                                            <Hyperlink Tag="{Binding AddressUrl}" Command="NavigationCommands.NavigateJournal" CommandParameter="{Binding}"><Run Text="{Binding Address, Mode=OneTime}"/></Hyperlink>
-                                    </TextBlock>
-                                </StackPanel>
-                            </Border>
-                        </Border>
+                                            <TextBlock Text="{Binding Place}" Width="250" VerticalAlignment="Center" Margin="20,0,0,0"/>
 
-                        <DataTemplate.Triggers>
-                                <!--<Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="bd" Property="Background" Value="#8044FF00"/>
-                                </Trigger>-->
-                                <DataTrigger Binding="{Binding IsNew}" Value="True">
-                                    <Setter TargetName="bd" Property="TextBlock.FontWeight" Value="Bold"/>
-                                </DataTrigger>
-                            <DataTrigger Binding="{Binding IsDuplicated}" Value="True">
-                                <Setter TargetName="bd" Property="TextBlock.Foreground" Value="Gray"/>
-                                <Setter TargetName="hlink" Property="TextBlock.Foreground" Value="Gray"/>
-                            </DataTrigger>
-                        </DataTemplate.Triggers>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ListBox>
-        </DockPanel>
+                                            <TextBlock Margin="20,0,0,0" VerticalAlignment="Center" Width="200">
+                                                <Hyperlink Tag="{Binding AddressUrl}" Command="NavigationCommands.NavigateJournal" CommandParameter="{Binding}"><Run Text="{Binding Address, Mode=OneTime}"/></Hyperlink>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Border>
+                                </Border>
+
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding IsNew}" Value="True">
+                                        <Setter TargetName="bd" Property="TextBlock.FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsDuplicated}" Value="True">
+                                        <Setter TargetName="bd" Property="TextBlock.Foreground" Value="Gray"/>
+                                        <Setter TargetName="hlink" Property="TextBlock.Foreground" Value="Gray"/>
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+            </TabItem>
+            <TabItem Header="Subscriptions">
+                <ListBox x:Name="lbSubscriptions">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Margin="20,0,0,0" VerticalAlignment="Center" Width="200">
+                                <Hyperlink Command="NavigationCommands.Zoom" CommandParameter="{Binding}"><Run Text="{Binding Name, Mode=OneTime}"/></Hyperlink>
+                            </TextBlock>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </TabItem>
+        </TabControl>
         
         <Border HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="#80FFFFFF" x:Name="bdWait" Visibility="Collapsed">
             <Border HorizontalAlignment="Center" VerticalAlignment="Center" Background="WhiteSmoke">

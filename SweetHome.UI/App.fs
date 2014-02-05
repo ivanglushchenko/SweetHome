@@ -35,6 +35,8 @@ let loadWindow() =
 
     let refreshItems() =
         items.Clear()
+        includedBedrooms.Clear()
+        includedOrigins.Clear()
         for ad in Storage.getLatest 1000 do
             items.Add ad
         refreshFilters()
@@ -79,6 +81,7 @@ let loadWindow() =
         new RoutedEventHandler(fun s e -> (e.OriginalSource :?> CheckBox).DataContext |> (fun t -> ignore(f t); invoke resetFilter))
         
     window.lbItems.ItemsSource <- itemsView
+    window.lbSubscriptions.ItemsSource <- Storage.getSubscriptions()
     window.btnRefresh.Click.Add(fun e -> updateItems())
     window.lbFilterByOrigin.AddHandler(CheckBox.CheckedEvent, asHandler (fun o -> o :?> string |> includedOrigins.Add))
     window.lbFilterByOrigin.AddHandler(CheckBox.UncheckedEvent, asHandler (fun o -> o :?> string |> includedOrigins.Remove))
@@ -86,6 +89,7 @@ let loadWindow() =
     window.lbFilterByBedrooms.AddHandler(CheckBox.UncheckedEvent, asHandler (fun o -> o :?> int option |> includedBedrooms.Remove))
     window.Root.CommandBindings.Add(new CommandBinding(NavigationCommands.GoToPage, new ExecutedRoutedEventHandler(fun s e -> e.Parameter :?> Advertisment |> openDetails))) |> ignore
     window.Root.CommandBindings.Add(new CommandBinding(NavigationCommands.NavigateJournal, new ExecutedRoutedEventHandler(fun s e -> e.Parameter :?> Advertisment |> openAddress))) |> ignore
+    window.Root.CommandBindings.Add(new CommandBinding(NavigationCommands.Zoom, new ExecutedRoutedEventHandler(fun s e -> (e.Parameter :?> Subscription).QueryUrl |> openUrl))) |> ignore
     window.Root
 
 [<STAThread>]

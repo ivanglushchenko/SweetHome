@@ -6,6 +6,7 @@ open System.Collections.Generic
 
 let AdvertismentChanged = new Event<_,_>()
 let IsNewPropertyStore = Dictionary<obj, bool>()
+let PriceHistoryPropertyStore = Dictionary<obj, int option list>()
 
 type Advertisment =
     {   Url: string
@@ -35,6 +36,13 @@ type Advertisment =
         and set(v) =
             IsNewPropertyStore.[x] <- v
             AdvertismentChanged.Trigger(x, PropertyChangedEventArgs("IsNew"))
+
+    member x.PriceHistory 
+        with get() =
+            if PriceHistoryPropertyStore.ContainsKey x then PriceHistoryPropertyStore.[x] else []
+        and set(v) =
+            PriceHistoryPropertyStore.[x] <- v
+            AdvertismentChanged.Trigger(x, PropertyChangedEventArgs("PriceHistory"))
 
 let EmptyAdvertisment =
     {   Url = ""

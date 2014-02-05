@@ -54,9 +54,14 @@ module private State =
                 dic.Add(key, List())
             dic.[key].Add ad
         let mark g =
-            let s = g |> Seq.sortBy (fun t -> -t.LastAppearedAt.Ticks) |> Seq.toList
-            let dateMin = s |> Seq.map (fun t -> t.FirstAppearedAt) |> Seq.min
-            s |> Seq.map (fun t -> { t with FirstAppearedAt = dateMin; IsDuplicated = t <> s.Head })
+            let sorted = g |> Seq.sortBy (fun t -> -t.LastAppearedAt.Ticks) |> Seq.toList
+            let dateMin = sorted |> Seq.map (fun t -> t.FirstAppearedAt) |> Seq.min
+            let extendAd ad =
+                let newAd = { ad with FirstAppearedAt = dateMin; IsDuplicated = ad <> sorted.Head; }
+                if sorted.Length > 1 then
+                    newAd.PriceHistory <- sorted |> List.map (fun t -> t.Price)
+                newAd
+            sorted |> Seq.map extendAd
         dic |> Seq.collect (fun t -> mark t.Value)
 
     let advertisments =
@@ -81,11 +86,14 @@ module private State =
         hs
 
     let containsAdvertisement ad =
-        advertismentsByUrl.ContainsKey ad.Url
+        advertismentsByUrl.ContainsKey ad.Url && advertismentsByUrl.[ad.Url].LastAppearedAt = ad.LastAppearedAt
 
     let addAdvertisement ad =
-        advertisments.Add ad
-        advertismentsByUrl.Add(ad.Url, ad)
+        if advertismentsByUrl.ContainsKey ad.Url then
+            advertismentsByUrl.[ad.Url] <- ad
+        else
+            advertisments.Add ad
+            advertismentsByUrl.Add(ad.Url, ad)
         ad.IsNew <- true
 
     let addOrigin ad =
@@ -104,13 +112,15 @@ module private State =
         fs.Dispose()
 
 let refreshSubscriptions() =
+    for ad in State.advertisments do
+        ad.IsNew <- false
     let latestAdvertisments = 
         State.subscriptions
         |> Seq.map (fun t -> t.Value)
         |> Getter.getAllSubscriptions
         |> Array.map Parsing.parsePage
         |> List.concat
-    let (existingAdvertisments, newAdvertisments) = latestAdvertisments |> List.partition State.containsAdvertisement
+    let (existingAdvertisments, newAdvertisments) = List.partition State.containsAdvertisement latestAdvertisments
     for ad in existingAdvertisments do
         State.addOrigin ad
     if newAdvertisments.Length > 0 then
@@ -132,3 +142,8 @@ let getLatest n =
     State.advertisments
     |> Seq.sortBy (fun t -> DateTime.MaxValue.Subtract t.LastAppearedAt)
     |> Seq.take m
+
+let getSubscriptions() =
+    State.subscriptions
+    |> Seq.map (fun t -> t.Value)
+    |> Seq.sortBy (fun t -> t.Name)
